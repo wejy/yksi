@@ -43,6 +43,15 @@ export const connectionStatusEnum = pgEnum('connection_status', [
 ])
 export const syncStatusEnum = pgEnum('sync_status', ['success', 'error', 'partial'])
 
+export const activityEventTypeEnum = pgEnum('activity_event_type', [
+  'task_created',
+  'task_updated',
+  'task_deleted',
+  'integration_sync',
+  'integration_connected',
+  'profile_updated',
+])
+
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').notNull().unique(),
@@ -192,6 +201,23 @@ export const syncLogs = pgTable('sync_logs', {
   startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
   completedAt: timestamp('completed_at', { withTimezone: true }),
 })
+
+export const activityEvents = pgTable(
+  'activity_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: activityEventTypeEnum('type').notNull(),
+    summary: text('summary').notNull(),
+    metadata: jsonb('metadata').notNull().default({}),
+    entityType: text('entity_type'),
+    entityId: text('entity_id'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('activity_events_user_created_idx').on(table.userId, table.createdAt)],
+)
 
 export const pushTokens = pgTable('push_tokens', {
   id: uuid('id').primaryKey().defaultRandom(),

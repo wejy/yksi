@@ -41,11 +41,15 @@ export function SearchBar({
 export function CategoryChip({
   label,
   count,
+  color,
+  icon,
   active,
   onClick,
 }: {
   label: string
   count?: number
+  color?: string | null
+  icon?: string | null
   active?: boolean
   onClick?: () => void
 }) {
@@ -57,12 +61,28 @@ export function CategoryChip({
       type="button"
       onClick={onClick}
       className={cn(
-        'rounded-full px-4 py-1.5 text-sm font-medium transition-colors whitespace-nowrap tabular-nums',
+        'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors whitespace-nowrap tabular-nums',
         active
           ? 'bg-primary text-on-primary'
           : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high',
       )}
+      style={!active && color ? { backgroundColor: `${color}18` } : undefined}
     >
+      {!active && color ? (
+        <span
+          className="h-2 w-2 shrink-0 rounded-full"
+          style={{ backgroundColor: color }}
+          aria-hidden
+        />
+      ) : null}
+      {!active && icon ? (
+        <span
+          className="material-symbols-outlined text-base"
+          style={color ? { color } : undefined}
+        >
+          {icon}
+        </span>
+      ) : null}
       {displayLabel}
     </button>
   )

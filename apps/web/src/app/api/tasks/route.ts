@@ -1,5 +1,7 @@
-import { requireAuth, apiError, jsonResponse } from '@/lib/api-utils'
+import { requireAuth, apiError, jsonResponse, ApiError } from '@/lib/api-utils'
 import { listTasks, createTask } from '@/lib/tasks'
+import { logActivitySafe } from '@/lib/activity'
+import { buildTaskCreatedSummary } from '@yksi/core'
 import { z } from 'zod'
 import type { NextRequest } from 'next/server'
 
@@ -74,6 +76,16 @@ export async function POST(request: Request) {
       dueAt: body.dueAt ? new Date(body.dueAt) : null,
       reminderAt: body.reminderAt ? new Date(body.reminderAt) : null,
       yhteispintaId: body.yhteispintaId,
+    })
+
+    if (!task) throw new ApiError(500, 'CREATE_FAILED', 'Tehtävän luonti epäonnistui')
+
+    logActivitySafe(session.user.id, {
+      type: 'task_created',
+      summary: buildTaskCreatedSummary(task.title),
+      metadata: { taskId: task.id, source: task.source },
+      entityType: 'task',
+      entityId: task.id,
     })
 
     return jsonResponse(task, 201)

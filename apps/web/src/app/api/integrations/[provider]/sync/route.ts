@@ -1,5 +1,7 @@
 import { requireAuth, apiError, jsonResponse, ApiError } from '@/lib/api-utils'
 import { syncConnection } from '@yksi/integrations'
+import { logActivitySafe } from '@/lib/activity'
+import { buildIntegrationSyncSummary } from '@yksi/core'
 import { eq, and } from 'drizzle-orm'
 import { getDb, integrationConnections, syncLogs } from '@yksi/db'
 import type { IntegrationProvider } from '@yksi/core'
@@ -48,16 +50,39 @@ export async function POST(
         })
         .where(eq(syncLogs.id, log!.id))
 
+      logActivitySafe(session.user.id, {
+        type: 'integration_sync',
+        summary: buildIntegrationSyncSummary(provider, result.created, result.updated, 'success'),
+        metadata: {
+          provider,
+          tasksCreated: result.created,
+          tasksUpdated: result.updated,
+          status: 'success',
+        },
+        entityType: 'integration',
+        entityId: provider,
+      })
+
       return jsonResponse(result)
     } catch (syncError) {
+      const errorMessage = syncError instanceof Error ? syncError.message : 'Unknown error'
       await db
         .update(syncLogs)
         .set({
           status: 'error',
-          errorMessage: syncError instanceof Error ? syncError.message : 'Unknown error',
+          errorMessage,
           completedAt: new Date(),
         })
         .where(eq(syncLogs.id, log!.id))
+
+      logActivitySafe(session.user.id, {
+        type: 'integration_sync',
+        summary: buildIntegrationSyncSummary(provider, 0, 0, 'error'),
+        metadata: { provider, status: 'error', errorMessage },
+        entityType: 'integration',
+        entityId: provider,
+      })
+
       throw syncError
     }
   } catch (error) {

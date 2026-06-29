@@ -46,6 +46,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="stream"
+        options={{
+          title: t('nav.stream'),
+          tabBarIcon: ({ color }) => <TabIcon name="〰️" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: t('nav.profile'),

@@ -12,6 +12,7 @@ export interface IntressiFilterOption {
   name: string
   taskCount: number
   color?: string | null
+  icon?: string | null
 }
 
 function toggleId(ids: string[], id: string): string[] {
@@ -89,6 +90,8 @@ function IntressiChipRow({
           key={intressi.id}
           label={intressi.name}
           count={intressi.taskCount}
+          color={intressi.color}
+          icon={intressi.icon}
           active={activeIds.includes(intressi.id)}
           onClick={() => onActiveIdsChange(toggleId(activeIds, intressi.id))}
         />

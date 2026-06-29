@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Button, bottomNavPaddingClass } from '@yksi/ui'
+import { Button, bottomNavPaddingClass, YksiLogoMark } from '@yksi/ui'
 import { INTEGRATION_CATALOG, formatSyncResult, formatSyncError, getProviderLabel } from '@yksi/core'
 import { SyncOverlay } from '@/components/sync-overlay'
 import { LocalizedBottomNav } from '@/components/localized-bottom-nav'
@@ -250,9 +250,7 @@ export default function ProfilePage() {
     <div className={`mx-auto min-h-screen max-w-2xl ${bottomNavPaddingClass}`}>
       <header className="fixed top-0 z-50 flex h-16 w-full items-center justify-between border-b border-outline-variant bg-surface px-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-on-primary">
-            Y
-          </div>
+          <YksiLogoMark />
           <h1 className="text-xl font-bold text-primary">{t('profile.title')}</h1>
         </div>
         <button

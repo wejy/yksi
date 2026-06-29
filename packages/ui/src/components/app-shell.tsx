@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { cn } from '../lib/utils'
 import { navItems } from '../tokens'
+import { YksiLogoMark } from './yksi-logo-mark'
 
 export interface TopAppBarProps {
   title?: string
@@ -9,6 +10,7 @@ export interface TopAppBarProps {
   onNotifications?: () => void
   rightAction?: React.ReactNode
   className?: string
+  homeHref?: string
 }
 
 export function TopAppBar({
@@ -18,6 +20,7 @@ export function TopAppBar({
   onNotifications,
   rightAction,
   className,
+  homeHref = '/',
 }: TopAppBarProps) {
   return (
     <header
@@ -37,7 +40,7 @@ export function TopAppBar({
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
         ) : (
-          <div className="h-8 w-8 rounded-full bg-primary-container" />
+          <YksiLogoMark href={homeHref} />
         )}
         <h1 className="text-lg font-bold text-on-surface">{title}</h1>
       </div>

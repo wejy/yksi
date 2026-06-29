@@ -109,7 +109,7 @@ export default function NewTaskPage() {
             value={contentDocument}
             onChange={handleContentChange}
             editable
-            className="min-h-[240px] overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
+            className="min-h-[240px] overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest"
           />
         </div>
 

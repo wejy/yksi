@@ -4,6 +4,7 @@ export { Card, CardHeader, CardTitle, CardContent } from './components/card'
 export { PriorityBadge } from './components/priority-badge'
 export { TaskCard } from './components/task-card'
 export { TopAppBar, BottomNav } from './components/app-shell'
+export { YksiLogoMark } from './components/yksi-logo-mark'
 export { AddTaskButton } from './components/add-task-button'
 export { SearchBar, CategoryChip, Fab } from './components/search-bar'
 export {
@@ -15,11 +16,13 @@ export {
   IntressiFilter,
   type IntressiFilterOption,
 } from './components/intressi-filter'
+export { IntressiBadge, type IntressiBadgeProps, type TaskIntressiDisplay } from './components/intressi-badge'
 export { TaskMonthCalendar } from './components/task-month-calendar'
 export { TaskWeekCalendar } from './components/task-week-calendar'
 export { TaskDayStrip } from './components/task-day-strip'
 export { CalendarViewToggle } from './components/calendar-view-toggle'
 export { CalendarTaskCountBadge, CalendarDayTaskIndicator } from './components/calendar-task-indicator'
+export { StreamTimeline } from './components/stream-timeline'
 export { ProgressRing } from './components/calendar'
 export { BentoSettingCard, SubtaskList } from './components/task-detail'
 export { cn } from './lib/utils'

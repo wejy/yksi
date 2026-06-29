@@ -7,11 +7,17 @@ import {
 } from '@/lib/oauth-state'
 import { OAUTH_PKCE_COOKIE } from '@/lib/oauth-pkce'
 import { encryptToken, syncConnection } from '@yksi/integrations'
+import { logActivitySafe } from '@/lib/activity'
+import {
+  buildIntegrationConnectedSummary,
+  buildIntegrationSyncSummary,
+  YKSI_DEV_URL,
+  type IntegrationProvider,
+} from '@yksi/core'
 import { exchangeLinearCode } from '@yksi/integrations/linear'
 import { exchangeNotionCode, searchNotionDatabases } from '@yksi/integrations/notion'
 import { exchangeGoogleCode, listGoogleCalendars } from '@yksi/integrations/google-calendar'
 import { getDb, integrationConnections } from '@yksi/db'
-import { YKSI_DEV_URL, type IntegrationProvider } from '@yksi/core'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -130,14 +136,52 @@ export async function GET(
 
     let syncResult = { created: 0, updated: 0 }
     if (connection) {
+      logActivitySafe(session.user.id, {
+        type: 'integration_connected',
+        summary: buildIntegrationConnectedSummary(provider),
+        metadata: { provider },
+        entityType: 'integration',
+        entityId: provider,
+      })
+
       try {
         syncResult = await syncConnection(
           connection.id,
           provider as IntegrationProvider,
           session.user.id,
         )
+        logActivitySafe(session.user.id, {
+          type: 'integration_sync',
+          summary: buildIntegrationSyncSummary(
+            provider,
+            syncResult.created,
+            syncResult.updated,
+            'success',
+          ),
+          metadata: {
+            provider,
+            tasksCreated: syncResult.created,
+            tasksUpdated: syncResult.updated,
+            status: 'success',
+            initial: true,
+          },
+          entityType: 'integration',
+          entityId: provider,
+        })
       } catch (syncError) {
         console.error('Initial sync after OAuth failed:', syncError)
+        logActivitySafe(session.user.id, {
+          type: 'integration_sync',
+          summary: buildIntegrationSyncSummary(provider, 0, 0, 'error'),
+          metadata: {
+            provider,
+            status: 'error',
+            errorMessage: syncError instanceof Error ? syncError.message : 'Unknown error',
+            initial: true,
+          },
+          entityType: 'integration',
+          entityId: provider,
+        })
       }
     }
 

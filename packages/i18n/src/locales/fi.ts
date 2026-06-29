@@ -15,6 +15,7 @@ export const fi = {
     dashboard: 'Etusivu',
     tasks: 'Tehtävät',
     calendar: 'Kalenteri',
+    stream: 'Virta',
     profile: 'Profiili',
   },
   tasks: {
@@ -43,6 +44,12 @@ export const fi = {
     sortDesc: 'Laskeva',
     clearFilters: 'Tyhjennä suodattimet',
     allSources: 'Kaikki lähteet',
+  },
+  stream: {
+    title: 'Virta',
+    subtitle: 'Päivittäinen loki tehtävistä, synkronoinneista ja muutoksista',
+    empty: 'Ei vielä tapahtumia',
+    emptyHint: 'Tehtävät, synkronoinnit ja profiilimuutokset näkyvät täällä.',
   },
   profile: {
     title: 'Profiili',

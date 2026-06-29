@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
-import { ProgressRing, Button, bottomNavPaddingClass } from '@yksi/ui'
+import { ProgressRing, Button, bottomNavPaddingClass, YksiLogoMark, IntressiBadge } from '@yksi/ui'
 import { LocalizedBottomNav } from '@/components/localized-bottom-nav'
 
 interface TodayTask {
@@ -12,6 +12,12 @@ interface TodayTask {
   status: 'open' | 'in_progress' | 'done' | 'cancelled'
   dueAt: string | null
   startAt: string | null
+  yhteispinta: {
+    id: string
+    name: string
+    color: string | null
+    icon: string | null
+  } | null
 }
 
 // Based on ui/dashboard_korjattu/code.html
@@ -58,18 +64,25 @@ export default function DashboardPage() {
   }
 
   function taskIcon(task: TodayTask): string {
+    if (task.yhteispinta?.icon) return task.yhteispinta.icon
     if (task.status === 'done') return 'check_circle'
     if (task.startAt) return 'groups'
     return 'description'
+  }
+
+  function taskIconStyle(task: TodayTask): CSSProperties | undefined {
+    if (!task.yhteispinta?.color || task.status === 'done') return undefined
+    return {
+      color: task.yhteispinta.color,
+      backgroundColor: `${task.yhteispinta.color}18`,
+    }
   }
 
   return (
     <div className={`mx-auto min-h-screen max-w-2xl ${bottomNavPaddingClass}`}>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-outline-variant bg-surface-container-lowest px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-on-primary">
-            Y
-          </div>
+          <YksiLogoMark />
           <h1 className="text-xl font-semibold text-on-surface">Yksi</h1>
         </div>
         <div className="flex items-center gap-4">
@@ -149,10 +162,28 @@ export default function DashboardPage() {
                   className={`flex w-full items-center gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-left shadow-sm transition-colors hover:border-primary/30 ${task.status === 'done' ? 'opacity-75' : ''}`}
                 >
                   <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-lg ${task.status === 'done' ? 'bg-surface-container' : 'bg-primary-container/10'}`}
+                    className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                      task.status === 'done'
+                        ? 'bg-surface-container'
+                        : task.yhteispinta?.color
+                          ? ''
+                          : 'bg-primary-container/10'
+                    }`}
+                    style={taskIconStyle(task)}
                   >
                     <span
-                      className={`material-symbols-outlined ${task.status === 'done' ? 'text-on-surface-variant' : 'text-primary'}`}
+                      className={`material-symbols-outlined ${
+                        task.status === 'done'
+                          ? 'text-on-surface-variant'
+                          : task.yhteispinta?.color
+                            ? ''
+                            : 'text-primary'
+                      }`}
+                      style={
+                        task.yhteispinta?.color && task.status !== 'done'
+                          ? { color: task.yhteispinta.color }
+                          : undefined
+                      }
                     >
                       {taskIcon(task)}
                     </span>
@@ -163,7 +194,16 @@ export default function DashboardPage() {
                     >
                       {task.title}
                     </h3>
-                    <p className="text-sm text-on-surface-variant">{formatTaskMeta(task)}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <p className="text-sm text-on-surface-variant">{formatTaskMeta(task)}</p>
+                      {task.yhteispinta ? (
+                        <IntressiBadge
+                          name={task.yhteispinta.name}
+                          color={task.yhteispinta.color}
+                          icon={task.yhteispinta.icon}
+                        />
+                      ) : null}
+                    </div>
                   </div>
                   <span className="material-symbols-outlined text-outline">chevron_right</span>
                 </button>

@@ -17,6 +17,7 @@ export const en: Messages = {
     dashboard: 'Home',
     tasks: 'Tasks',
     calendar: 'Calendar',
+    stream: 'Stream',
     profile: 'Profile',
   },
   tasks: {
@@ -45,6 +46,12 @@ export const en: Messages = {
     sortDesc: 'Descending',
     clearFilters: 'Clear filters',
     allSources: 'All sources',
+  },
+  stream: {
+    title: 'Stream',
+    subtitle: 'Daily log of tasks, syncs, and profile changes',
+    empty: 'No activity yet',
+    emptyHint: 'Tasks, syncs, and profile changes will appear here.',
   },
   profile: {
     title: 'Profile',

@@ -80,6 +80,7 @@ export const navItems = [
   { id: 'dashboard', icon: 'dashboard', label: 'Etusivu' },
   { id: 'tasks', icon: 'checklist', label: 'Tehtävät' },
   { id: 'calendar', icon: 'calendar_month', label: 'Kalenteri' },
+  { id: 'stream', icon: 'history', label: 'Virta' },
   { id: 'profile', icon: 'person', label: 'Profiili' },
 ] as const
 

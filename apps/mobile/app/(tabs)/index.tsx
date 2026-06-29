@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-nati
 import { useRouter, useFocusEffect } from 'expo-router'
 import { apiFetch } from '@/lib/api'
 import { useTabScrollBottomPadding } from '@/lib/layout'
+import { YksiLogoMark } from '@/components/yksi-logo-mark'
 import type { TaskStatus, TodaySummary } from '@yksi/core'
 
 interface TodayTask {
@@ -95,9 +96,7 @@ export default function DashboardScreen() {
       <View className="border-b border-outline-variant bg-surface-container-lowest px-4 pb-4 pt-14">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-3">
-            <View className="h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Text className="text-sm font-bold text-on-primary">Y</Text>
-            </View>
+            <YksiLogoMark />
             <Text className="text-xl font-semibold text-on-surface">Yksi</Text>
           </View>
           <View className="h-8 w-8 items-center justify-center rounded-full bg-primary-container">

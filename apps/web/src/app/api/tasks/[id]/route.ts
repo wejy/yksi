@@ -1,5 +1,7 @@
 import { requireAuth, apiError, jsonResponse, ApiError } from '@/lib/api-utils'
 import { getTaskById, updateTask, deleteTask } from '@/lib/tasks'
+import { logActivitySafe } from '@/lib/activity'
+import { buildTaskDeletedSummary, buildTaskUpdatedSummary } from '@yksi/core'
 import {
   getDecryptedToken,
   updateLinearIssueStatus,
@@ -49,6 +51,10 @@ export async function PATCH(
     const existing = await getTaskById(session.user.id, id)
     if (!existing) throw new ApiError(404, 'TASK_NOT_FOUND', 'Tehtävää ei löydy')
 
+    const changes = Object.keys(body).filter(
+      (key) => body[key as keyof typeof body] !== undefined,
+    )
+
     const task = await updateTask(session.user.id, id, {
       ...body,
       contentDocument: body.contentDocument as import('@yksi/core').TaskContentDocument | null | undefined,
@@ -96,6 +102,16 @@ export async function PATCH(
       }
     }
 
+    if (task) {
+      logActivitySafe(session.user.id, {
+        type: 'task_updated',
+        summary: buildTaskUpdatedSummary(task.title, changes),
+        metadata: { taskId: task.id, changes, source: task.source },
+        entityType: 'task',
+        entityId: task.id,
+      })
+    }
+
     return jsonResponse(task)
   } catch (error) {
     return apiError(error)
@@ -109,8 +125,21 @@ export async function DELETE(
   try {
     const session = await requireAuth()
     const { id } = await params
+    const existing = await getTaskById(session.user.id, id)
+    if (!existing) throw new ApiError(404, 'TASK_NOT_FOUND', 'Tehtävää ei löydy tai ei voi poistaa')
+
     const deleted = await deleteTask(session.user.id, id)
     if (!deleted) throw new ApiError(404, 'TASK_NOT_FOUND', 'Tehtävää ei löydy tai ei voi poistaa')
+
+    const taskSnapshot = existing as unknown as { title: string; source: typeof existing.source }
+    logActivitySafe(session.user.id, {
+      type: 'task_deleted',
+      summary: buildTaskDeletedSummary(taskSnapshot.title),
+      metadata: { taskId: id, source: taskSnapshot.source },
+      entityType: 'task',
+      entityId: id,
+    })
+
     return new Response(null, { status: 204 })
   } catch (error) {
     return apiError(error)

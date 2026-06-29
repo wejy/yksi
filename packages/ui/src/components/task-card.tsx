@@ -2,8 +2,9 @@
 import * as React from 'react'
 import { cn } from '../lib/utils'
 import type { LinearTaskSourceDetail, TaskPriority, TaskSource, TaskStatus } from '@yksi/core'
-import { INTRESSI_LABEL, getTaskSourceMeta } from '@yksi/core'
+import { getTaskSourceMeta } from '@yksi/core'
 import { PriorityBadge } from './priority-badge'
+import { IntressiBadge, type TaskIntressiDisplay } from './intressi-badge'
 
 export interface TaskCardProps {
   id: string
@@ -11,6 +12,7 @@ export interface TaskCardProps {
   description?: string | null
   priority: TaskPriority
   dueAt?: Date | null
+  intressi?: TaskIntressiDisplay | null
   intressiName?: string | null
   /** @deprecated use intressiName */
   yhteispintaName?: string | null
@@ -38,6 +40,7 @@ export function TaskCard({
   description,
   priority,
   dueAt,
+  intressi,
   intressiName,
   yhteispintaName,
   labels = [],
@@ -52,11 +55,15 @@ export function TaskCard({
 }: TaskCardProps) {
   const isDone = status === 'done'
   const sourceMeta = getTaskSourceMeta(source)
-  const intressi = intressiName ?? yhteispintaName
+  const intressiDisplay: TaskIntressiDisplay | null =
+    intressi ??
+    (intressiName || yhteispintaName
+      ? { name: (intressiName ?? yhteispintaName)! }
+      : null)
   const visibleLabels = labels.slice(0, 4)
   const extraLabels = labels.length - visibleLabels.length
   const hasFooterMeta =
-    !!intressi || !!sourceDetail?.teamName || !!timeRange || !!dueAt
+    !!intressiDisplay || !!sourceDetail?.teamName || !!timeRange || !!dueAt
 
   return (
     <div
@@ -141,13 +148,14 @@ export function TaskCard({
         <div className="mt-2 flex items-end justify-between gap-2">
           {hasFooterMeta ? (
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3 text-xs text-on-surface-variant">
-              {intressi && (
-                <span className="flex items-center gap-1 font-medium text-on-surface">
-                  <span className="material-symbols-outlined text-sm">target</span>
-                  <span className="text-on-surface-variant">{INTRESSI_LABEL}:</span> {intressi}
-                </span>
+              {intressiDisplay && (
+                <IntressiBadge
+                  name={intressiDisplay.name}
+                  color={intressiDisplay.color}
+                  icon={intressiDisplay.icon}
+                />
               )}
-              {sourceDetail?.teamName && !intressi && (
+              {sourceDetail?.teamName && !intressiDisplay && (
                 <span className="flex items-center gap-1">
                   <span className="material-symbols-outlined text-sm">groups</span>
                   {sourceDetail.teamName}

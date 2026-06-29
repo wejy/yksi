@@ -14,7 +14,7 @@ export const INTEGRATION_CATALOG: IntegrationCatalogItem[] = [
     id: 'linear',
     name: 'Linear',
     icon: 'linear_scale',
-    description: 'Tuo issuet ja prioriteetit Yksiin.',
+    description: 'Tuo issuet ja prioriteetit Yhteen.',
     availability: 'available',
   },
   {

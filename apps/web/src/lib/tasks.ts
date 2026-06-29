@@ -23,12 +23,17 @@ function mapTaskRow<T extends {
     description: string | null
     contentDocument: unknown
   }
-  yhteispinta: { id: string; name: string; color: string | null } | null
+  yhteispinta: { id: string; name: string; color: string | null; icon: string | null } | null
 }>(row: T) {
   return hydrateTaskContent({
     ...row.task,
     yhteispinta: row.yhteispinta
-      ? { id: row.yhteispinta.id, name: row.yhteispinta.name, color: row.yhteispinta.color }
+      ? {
+          id: row.yhteispinta.id,
+          name: row.yhteispinta.name,
+          color: row.yhteispinta.color,
+          icon: row.yhteispinta.icon,
+        }
       : null,
     labels: row.task.labels ?? [],
     sourceDetail:
@@ -206,7 +211,12 @@ export async function getTodayTasks(userId: string, timezone = 'Europe/Helsinki'
     .map(({ task, yhteispinta }) => ({
       ...task,
       yhteispinta: yhteispinta
-        ? { id: yhteispinta.id, name: yhteispinta.name, color: yhteispinta.color }
+        ? {
+            id: yhteispinta.id,
+            name: yhteispinta.name,
+            color: yhteispinta.color,
+            icon: yhteispinta.icon,
+          }
         : null,
     }))
     .sort(

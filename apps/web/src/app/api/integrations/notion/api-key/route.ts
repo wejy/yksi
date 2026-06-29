@@ -1,6 +1,11 @@
 import { requireAuth, apiError, jsonResponse, ApiError } from '@/lib/api-utils'
 import { checkIntegrationLimit } from '@/lib/freemium'
 import { encryptToken, syncConnection } from '@yksi/integrations'
+import { logActivitySafe } from '@/lib/activity'
+import {
+  buildIntegrationConnectedSummary,
+  buildIntegrationSyncSummary,
+} from '@yksi/core'
 import {
   validateNotionApiKey,
   searchNotionDatabases,
@@ -63,10 +68,40 @@ export async function POST(request: Request) {
 
     let syncResult = { created: 0, updated: 0 }
     if (connection) {
+      logActivitySafe(session.user.id, {
+        type: 'integration_connected',
+        summary: buildIntegrationConnectedSummary('notion'),
+        metadata: { provider: 'notion', authType: 'api_key' },
+        entityType: 'integration',
+        entityId: 'notion',
+      })
       try {
         syncResult = await syncConnection(connection.id, 'notion', session.user.id)
+        logActivitySafe(session.user.id, {
+          type: 'integration_sync',
+          summary: buildIntegrationSyncSummary('notion', syncResult.created, syncResult.updated),
+          metadata: {
+            provider: 'notion',
+            tasksCreated: syncResult.created,
+            tasksUpdated: syncResult.updated,
+            status: 'success',
+          },
+          entityType: 'integration',
+          entityId: 'notion',
+        })
       } catch (syncError) {
         console.error('Initial Notion API key sync failed:', syncError)
+        logActivitySafe(session.user.id, {
+          type: 'integration_sync',
+          summary: buildIntegrationSyncSummary('notion', 0, 0, 'error'),
+          metadata: {
+            provider: 'notion',
+            status: 'error',
+            errorMessage: syncError instanceof Error ? syncError.message : 'Unknown error',
+          },
+          entityType: 'integration',
+          entityId: 'notion',
+        })
       }
     }
 

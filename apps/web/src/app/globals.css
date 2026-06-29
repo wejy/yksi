@@ -37,6 +37,15 @@
   --color-on-background: #0b1c30;
   --color-surface-variant: #d3e4fe;
 
+  /* shadcn / BlockNote suggestion menu tokens */
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0b1c30;
+  --color-accent: #e5eeff;
+  --color-accent-foreground: #0b1c30;
+  --color-muted-foreground: #464555;
+  --color-border: #c7c4d8;
+  --color-destructive: #ba1a1a;
+
   --spacing-gutter: 16px;
   --spacing-stack-sm: 8px;
   --spacing-stack-md: 16px;
@@ -78,4 +87,34 @@
 
 .task-content-viewer .bn-block-group {
   margin-bottom: 0.25rem;
+}
+
+.task-content-editor .bn-editor {
+  background: transparent;
+  padding: 0.75rem 1rem;
+  min-height: 12rem;
+}
+
+.task-content-editor .bn-suggestion-menu {
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  box-shadow: 0 8px 24px rgb(11 28 48 / 0.12);
+}
+
+.task-content-editor .bn-suggestion-menu-item {
+  border-radius: 0.375rem;
+}
+
+.task-content-editor .bn-suggestion-menu-item:hover,
+.task-content-editor .bn-suggestion-menu-item[aria-selected="true"] {
+  background-color: var(--color-surface-container-low);
+  color: var(--color-on-surface);
+}
+
+.task-content-editor .bn-suggestion-menu-label {
+  color: var(--color-on-surface-variant);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }

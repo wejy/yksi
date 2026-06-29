@@ -36,7 +36,7 @@ interface Task {
   source: TaskSource
   labels: string[]
   sourceDetail: LinearTaskSourceDetail | null
-  yhteispinta: { id: string; name: string; color: string | null } | null
+  yhteispinta: { id: string; name: string; color: string | null; icon: string | null } | null
 }
 
 function intressiFilterSummary(
@@ -77,11 +77,18 @@ export default function TasksPage() {
       .then((data) =>
         setIntressit(
           (data.intressit ?? []).map(
-            (item: { id: string; name: string; taskCount: number; color: string | null }) => ({
+            (item: {
+              id: string
+              name: string
+              taskCount: number
+              color: string | null
+              icon: string | null
+            }) => ({
               id: item.id,
               name: item.name,
               taskCount: item.taskCount ?? 0,
               color: item.color,
+              icon: item.icon,
             }),
           ),
         ),
@@ -262,7 +269,15 @@ export default function TasksPage() {
                   source={task.source}
                   labels={task.labels}
                   sourceDetail={task.sourceDetail}
-                  intressiName={task.yhteispinta?.name}
+                  intressi={
+                    task.yhteispinta
+                      ? {
+                          name: task.yhteispinta.name,
+                          color: task.yhteispinta.color,
+                          icon: task.yhteispinta.icon,
+                        }
+                      : null
+                  }
                   dueAt={task.dueAt ? new Date(task.dueAt) : null}
                   onClick={(id) => router.push(`/task/${id}`)}
                   onToggle={async (id) => {

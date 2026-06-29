@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { TopAppBar, BentoSettingCard, Button, screenBottomPaddingClass } from '@yksi/ui'
+import { TopAppBar, BentoSettingCard, Button, screenBottomPaddingClass, IntressiBadge } from '@yksi/ui'
 import type { TaskContentDocument, LinearTaskSourceDetail, TaskSource } from '@yksi/core'
 import { INTRESSI_LABEL, getTaskSourceMeta, fromDatetimeLocalValue, toDatetimeLocalValue } from '@yksi/core'
 import { TaskContentEditor, TaskContentViewer } from '@/components/task-content-editor'
@@ -22,7 +22,7 @@ interface TaskDetail {
   externalUrl: string | null
   labels: string[]
   sourceDetail: LinearTaskSourceDetail | null
-  yhteispinta: { id: string; name: string } | null
+  yhteispinta: { id: string; name: string; color: string | null; icon: string | null } | null
 }
 
 // Based on ui/teht_v_n_tiedot/code.html
@@ -145,6 +145,17 @@ export default function TaskDetailPage() {
           className="w-full border-none bg-transparent text-2xl font-bold text-on-surface focus:outline-none read-only:opacity-90"
         />
 
+        {task.yhteispinta ? (
+          <IntressiBadge
+            name={task.yhteispinta.name}
+            color={task.yhteispinta.color}
+            icon={task.yhteispinta.icon}
+            size="md"
+          />
+        ) : task.sourceDetail?.projectName ? (
+          <IntressiBadge name={task.sourceDetail.projectName} icon="target" size="md" />
+        ) : null}
+
         <section>
           <h3 className="mb-2 text-sm font-medium uppercase tracking-wide text-on-surface-variant">
             Sisältö
@@ -155,7 +166,7 @@ export default function TaskDetailPage() {
               value={contentDocument}
               onChange={handleContentChange}
               editable
-              className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
+              className="overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest"
             />
           ) : (
             <TaskContentViewer value={contentDocument} />
@@ -193,11 +204,21 @@ export default function TaskDetailPage() {
             onCreated={(intressi) => setIntressit((prev) => [...prev, intressi])}
           />
         ) : (
-          <BentoSettingCard
-            icon="target"
-            label={INTRESSI_LABEL}
-            value={task.yhteispinta?.name ?? task.sourceDetail?.projectName ?? 'Ei valittu'}
-          />
+          <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-4">
+            <p className="mb-2 text-xs text-on-surface-variant">{INTRESSI_LABEL}</p>
+            {task.yhteispinta ? (
+              <IntressiBadge
+                name={task.yhteispinta.name}
+                color={task.yhteispinta.color}
+                icon={task.yhteispinta.icon}
+                size="md"
+              />
+            ) : (
+              <p className="text-sm font-semibold text-on-surface">
+                {task.sourceDetail?.projectName ?? 'Ei valittu'}
+              </p>
+            )}
+          </div>
         )}
 
         {isNative ? (

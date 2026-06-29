@@ -36,7 +36,7 @@ export function TaskContentEditor({
   }, [editor, onChange])
 
   return (
-    <div className={className}>
+    <div className={`task-content-editor ${className ?? ''}`}>
       <BlockNoteView editor={editor} editable={editable} theme="light" />
     </div>
   )
@@ -64,7 +64,7 @@ export function TaskContentViewer({ value, className }: TaskContentViewerProps) 
   }
 
   return (
-    <div className={`task-content-viewer rounded-xl border border-outline-variant bg-surface-container-lowest p-3 ${className ?? ''}`}>
+    <div className={`task-content-viewer rounded-lg border border-outline-variant bg-surface-container-lowest p-3 ${className ?? ''}`}>
       <BlockNoteView editor={editor} editable={false} theme="light" />
     </div>
   )
