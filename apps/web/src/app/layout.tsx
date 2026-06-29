@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
+import Script from 'next/script'
 import './globals.css'
 import { AppProviders } from '@/components/app-providers'
+import { THEME_INIT_SCRIPT } from '@/lib/theme'
 
 export const metadata: Metadata = {
   title: 'Yksi — Unified tehtävienhallinta',
@@ -15,8 +17,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fi">
+    <html lang="fi" suppressHydrationWarning>
       <head>
+        <Script id="yksi-theme-init" strategy="beforeInteractive">
+          {THEME_INIT_SCRIPT}
+        </Script>
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"

@@ -156,7 +156,7 @@ export function buildIntegrationConnectedSummary(provider: IntegrationProvider |
 }
 
 export function buildProfileUpdatedSummary(changes: string[]): string {
-  const labels: Record<string, string> = { name: 'nimi', locale: 'kieli' }
+  const labels: Record<string, string> = { name: 'nimi', locale: 'kieli', theme: 'teema' }
   const fields = changes.map((c) => labels[c] ?? c).join(', ')
   return fields ? `Päivitettiin profiilia (${fields})` : 'Päivitettiin profiilia'
 }

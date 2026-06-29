@@ -78,6 +78,14 @@ export const en: Messages = {
     upgradeBody: 'Premium includes unlimited integrations and advanced filters.',
     upgradeCta: 'Upgrade to Premium — €9/mo',
     upgradeLoading: 'Loading…',
+    themePage: {
+      title: 'Theme',
+      description: 'Choose how Yksi looks on this device.',
+      light: 'Light',
+      dark: 'Dark',
+      system: 'System',
+      systemHint: 'Follow your device light or dark mode.',
+    },
     personal: {
       title: 'Personal details',
       name: 'Name',

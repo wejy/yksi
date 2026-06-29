@@ -26,7 +26,7 @@ interface User {
 const SETTINGS = [
   { icon: 'person', key: 'personalDetails' as const, href: '/profile/personal' },
   { icon: 'notifications_active', key: 'notifications' as const },
-  { icon: 'palette', key: 'theme' as const },
+  { icon: 'palette', key: 'theme' as const, href: '/profile/theme' },
 ]
 
 type ApiKeyProvider = 'linear' | 'notion'

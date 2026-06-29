@@ -7,6 +7,7 @@ import type { TaskContentDocument } from '@yksi/core'
 import { emptyTaskContent } from '@yksi/core'
 import { useI18n } from '@yksi/i18n/react'
 import type { Locale } from '@yksi/i18n'
+import { useTheme } from '@/components/theme-provider'
 import { getBlockNoteDictionary } from '@/lib/blocknote-dictionary'
 import '@blocknote/core/fonts/inter.css'
 import '@blocknote/shadcn/style.css'
@@ -24,7 +25,8 @@ function TaskContentEditorInner({
   editable = true,
   className,
   locale,
-}: TaskContentEditorProps & { locale: Locale }) {
+  resolvedTheme,
+}: TaskContentEditorProps & { locale: Locale; resolvedTheme: 'light' | 'dark' }) {
   const dictionary = useMemo(() => getBlockNoteDictionary(locale), [locale])
   const initialContent = useMemo(
     () => (value?.length ? value : emptyTaskContent()) as never,
@@ -42,13 +44,14 @@ function TaskContentEditorInner({
 
   return (
     <div className={`task-content-editor ${className ?? ''}`}>
-      <BlockNoteView editor={editor} editable={editable} theme="light" />
+      <BlockNoteView editor={editor} editable={editable} theme={resolvedTheme} />
     </div>
   )
 }
 
 export function TaskContentEditor(props: TaskContentEditorProps) {
   const { locale } = useI18n()
+  const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -63,7 +66,7 @@ export function TaskContentEditor(props: TaskContentEditorProps) {
     )
   }
 
-  return <TaskContentEditorInner key={locale} {...props} locale={locale} />
+  return <TaskContentEditorInner key={`${locale}-${resolvedTheme}`} {...props} locale={locale} resolvedTheme={resolvedTheme} />
 }
 
 interface TaskContentViewerProps {
@@ -75,7 +78,8 @@ function TaskContentViewerInner({
   value,
   className,
   locale,
-}: TaskContentViewerProps & { locale: Locale }) {
+  resolvedTheme,
+}: TaskContentViewerProps & { locale: Locale; resolvedTheme: 'light' | 'dark' }) {
   const dictionary = useMemo(() => getBlockNoteDictionary(locale), [locale])
   const editor = useCreateBlockNote({
     initialContent: (value?.length ? value : undefined) as never,
@@ -89,13 +93,14 @@ function TaskContentViewerInner({
 
   return (
     <div className={`task-content-viewer rounded-lg border border-outline-variant bg-surface-container-lowest p-3 ${className ?? ''}`}>
-      <BlockNoteView editor={editor} editable={false} theme="light" />
+      <BlockNoteView editor={editor} editable={false} theme={resolvedTheme} />
     </div>
   )
 }
 
 export function TaskContentViewer({ value, className }: TaskContentViewerProps) {
   const { locale } = useI18n()
+  const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -118,5 +123,5 @@ export function TaskContentViewer({ value, className }: TaskContentViewerProps) 
     )
   }
 
-  return <TaskContentViewerInner key={locale} value={value} className={className} locale={locale} />
+  return <TaskContentViewerInner key={`${locale}-${resolvedTheme}`} value={value} className={className} locale={locale} resolvedTheme={resolvedTheme} />
 }

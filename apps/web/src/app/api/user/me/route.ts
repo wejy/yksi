@@ -2,13 +2,14 @@ import { requireAuth, apiError, jsonResponse, ApiError } from '@/lib/api-utils'
 import { eq, and, isNotNull } from 'drizzle-orm'
 import { getDb, users, accounts } from '@yksi/db'
 import { logActivitySafe } from '@/lib/activity'
-import { buildProfileUpdatedSummary } from '@yksi/core'
+import { buildProfileUpdatedSummary, isThemePreference } from '@yksi/core'
 import { z } from 'zod'
 import { isLocale } from '@yksi/i18n'
 
 const patchSchema = z.object({
   name: z.string().trim().min(1).max(200).optional(),
   locale: z.enum(['fi', 'en']).optional(),
+  theme: z.enum(['light', 'dark', 'system']).optional(),
 })
 
 async function getUserProfile(userId: string) {
@@ -22,6 +23,7 @@ async function getUserProfile(userId: string) {
       subscriptionTier: users.subscriptionTier,
       timezone: users.timezone,
       locale: users.locale,
+      theme: users.theme,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -75,6 +77,10 @@ export async function PATCH(request: Request) {
     if (body.locale !== undefined && isLocale(body.locale)) {
       updates.locale = body.locale
       changes.push('locale')
+    }
+    if (body.theme !== undefined && isThemePreference(body.theme)) {
+      updates.theme = body.theme
+      changes.push('theme')
     }
 
     if (Object.keys(updates).length === 1) {

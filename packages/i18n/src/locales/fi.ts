@@ -76,6 +76,14 @@ export const fi = {
     upgradeBody: 'Premium sisältää rajattomat integraatiot ja kehittyneet filtterit.',
     upgradeCta: 'Päivitä Premiumiin — 9 €/kk',
     upgradeLoading: 'Ladataan…',
+    themePage: {
+      title: 'Teema',
+      description: 'Valitse sovelluksen väriteema.',
+      light: 'Vaalea',
+      dark: 'Tumma',
+      system: 'Järjestelmä',
+      systemHint: 'Seuraa laitteen vaaleaa tai tummaa tilaa.',
+    },
     personal: {
       title: 'Henkilötiedot',
       name: 'Nimi',

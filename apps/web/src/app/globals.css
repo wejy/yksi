@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-surface: #f8f9ff;
   --color-surface-dim: #cbdbf5;
@@ -69,6 +71,54 @@
   body {
     @apply bg-background text-on-surface font-sans antialiased;
   }
+
+  .dark {
+    color-scheme: dark;
+
+    --color-surface: #121f32;
+    --color-surface-dim: #0b121f;
+    --color-surface-bright: #1a2438;
+    --color-surface-container-lowest: #161f2e;
+    --color-surface-container-low: #1a2438;
+    --color-surface-container: #213145;
+    --color-surface-container-high: #283a52;
+    --color-surface-container-highest: #30445f;
+    --color-on-surface: #eaf1ff;
+    --color-on-surface-variant: #c7c4d8;
+    --color-inverse-surface: #eaf1ff;
+    --color-inverse-on-surface: #213145;
+    --color-outline: #8e8c9a;
+    --color-outline-variant: #464555;
+    --color-surface-tint: #c3c0ff;
+    --color-primary: #c3c0ff;
+    --color-on-primary: #0f0069;
+    --color-primary-container: #3323cc;
+    --color-on-primary-container: #e2dfff;
+    --color-inverse-primary: #3525cd;
+    --color-secondary: #c4c7c9;
+    --color-on-secondary: #191c1e;
+    --color-secondary-container: #444749;
+    --color-on-secondary-container: #e0e3e5;
+    --color-tertiary: #ffb695;
+    --color-on-tertiary: #351000;
+    --color-tertiary-container: #7b2f00;
+    --color-on-tertiary-container: #ffdbcc;
+    --color-error: #ffb4ab;
+    --color-on-error: #690005;
+    --color-error-container: #93000a;
+    --color-on-error-container: #ffdad6;
+    --color-background: #0b1c30;
+    --color-on-background: #eaf1ff;
+    --color-surface-variant: #30445f;
+
+    --color-popover: #1a2438;
+    --color-popover-foreground: #eaf1ff;
+    --color-accent: #283a52;
+    --color-accent-foreground: #eaf1ff;
+    --color-muted-foreground: #c7c4d8;
+    --color-border: #464555;
+    --color-destructive: #ffb4ab;
+  }
 }
 
 .material-symbols-outlined {
@@ -98,7 +148,7 @@
 .task-content-editor .bn-suggestion-menu {
   background-color: var(--color-surface-container-lowest);
   border: 1px solid var(--color-outline-variant);
-  box-shadow: 0 8px 24px rgb(11 28 48 / 0.12);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.28);
 }
 
 .task-content-editor .bn-suggestion-menu-item {
