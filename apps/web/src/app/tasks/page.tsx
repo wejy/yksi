@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   TopAppBar,
-  BottomNav,
   TaskCard,
   SearchBar,
   AddTaskButton,
@@ -15,6 +14,8 @@ import {
   type TaskSourceFilterOption,
   type IntressiFilterOption,
 } from '@yksi/ui'
+import { LocalizedBottomNav } from '@/components/localized-bottom-nav'
+import { useI18n } from '@yksi/i18n/react'
 import {
   TASKS_LIST_PAGE_SIZE,
   DEFAULT_TASK_SORT_BY,
@@ -38,17 +39,22 @@ interface Task {
   yhteispinta: { id: string; name: string; color: string | null } | null
 }
 
-function intressiFilterSummary(intressit: IntressiFilterOption[], activeIds: string[]): string | null {
+function intressiFilterSummary(
+  intressit: IntressiFilterOption[],
+  activeIds: string[],
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string | null {
   if (activeIds.length === 0) return null
   if (activeIds.length === 1) {
     return intressit.find((i) => i.id === activeIds[0])?.name ?? null
   }
-  return `${activeIds.length} intressiä`
+  return t('tasks.intressiCount', { count: activeIds.length })
 }
 
 // Based on ui/teht_v_lista/code.html
 export default function TasksPage() {
   const router = useRouter()
+  const { t } = useI18n()
   const [tasks, setTasks] = useState<Task[]>([])
   const [intressit, setIntressit] = useState<IntressiFilterOption[]>([])
   const [availableSources, setAvailableSources] = useState<TaskSourceFilterOption[]>([])
@@ -177,7 +183,7 @@ export default function TasksPage() {
 
   const openCount = tasks.filter((t) => t.status !== 'done').length
   const loadedCount = tasks.length
-  const intressiSummary = intressiFilterSummary(intressit, activeIntressiIds)
+  const intressiSummary = intressiFilterSummary(intressit, activeIntressiIds, t)
   const sourcesFiltered = activeSources.length > 0
   const intressiFiltered = activeIntressiIds.length > 0
 
@@ -187,21 +193,26 @@ export default function TasksPage() {
 
       <main className="space-y-4 p-4">
         <div className="px-1">
-          <h2 className="text-2xl font-bold text-on-surface">Tehtävät</h2>
+          <h2 className="text-2xl font-bold text-on-surface">{t('tasks.title')}</h2>
           <p className="text-sm text-on-surface-variant">
             {search
-              ? `${total} hakutulosta`
+              ? t('tasks.searchResults', { count: total })
               : intressiSummary
-                ? `${total} intressissä «${intressiSummary}» · ${loadedCount}/${total} ladattu`
-                : `${openCount} avointa ladatussa · ${loadedCount}/${total} ladattu`}
+                ? t('tasks.intressiLoaded', {
+                    total,
+                    name: intressiSummary,
+                    loaded: loadedCount,
+                  })
+                : t('tasks.openLoaded', { open: openCount, loaded: loadedCount, total })}
           </p>
           <AddTaskButton
             onClick={() => router.push('/tasks/new')}
             className="mt-2"
+            label={t('tasks.addTask')}
           />
         </div>
 
-        <SearchBar value={search} onChange={setSearch} />
+        <SearchBar value={search} onChange={setSearch} placeholder={t('tasks.searchPlaceholder')} />
 
         <IntressiFilter
           intressit={intressit}
@@ -227,17 +238,15 @@ export default function TasksPage() {
               <span className="material-symbols-outlined mb-2 text-4xl text-outline">inbox</span>
               <p className="font-medium text-on-surface">
                 {search
-                  ? 'Ei hakutuloksia'
+                  ? t('tasks.noResults')
                   : intressiFiltered
-                    ? 'Ei tehtäviä valituissa intresseissä'
+                    ? t('tasks.noTasksIntressi')
                     : sourcesFiltered
-                      ? 'Ei tehtäviä valituista lähteistä'
-                      : 'Ei tehtäviä'}
+                      ? t('tasks.noTasksSource')
+                      : t('tasks.noTasks')}
               </p>
               <p className="mt-1 text-sm text-on-surface-variant">
-                {search
-                  ? 'Kokeile toista hakusanaa'
-                  : 'Synkkaa Linear/Notion tai luo uusi tehtävä'}
+                {search ? t('tasks.tryAnotherSearch') : t('tasks.syncOrCreate')}
               </p>
             </div>
           ) : (
@@ -276,9 +285,9 @@ export default function TasksPage() {
                 {loadingMore ? (
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-outline-variant border-t-primary" />
                 ) : hasMore ? (
-                  <p className="text-xs text-on-surface-variant">Vieritä alas ladataksesi lisää</p>
+                  <p className="text-xs text-on-surface-variant">{t('tasks.scrollForMore')}</p>
                 ) : loadedCount > 0 && loadedCount >= total ? (
-                  <p className="text-xs text-on-surface-variant">Kaikki tehtävät ladattu</p>
+                  <p className="text-xs text-on-surface-variant">{t('tasks.allLoaded')}</p>
                 ) : null}
               </div>
             </>
@@ -286,18 +295,7 @@ export default function TasksPage() {
         </div>
       </main>
 
-      <BottomNav
-        activeTab="tasks"
-        onTabChange={(tab) => {
-          const routes: Record<string, string> = {
-            dashboard: '/',
-            tasks: '/tasks',
-            calendar: '/calendar',
-            profile: '/profile',
-          }
-          router.push(routes[tab] ?? '/')
-        }}
-      />
+      <LocalizedBottomNav activeTab="tasks" />
     </div>
   )
 }

@@ -1,17 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
+import {
+  filterTasksForDay,
+  formatTaskTimeRange,
+  isSameCalendarDay,
+  type TaskSource,
+  type TaskStatus,
+} from '@yksi/core'
 import { apiFetch } from '@/lib/api'
 import { useTabScrollBottomPadding } from '@/lib/layout'
+import { TaskCalendar } from '@/components/task-calendar'
 
 interface Task {
   id: string
   title: string
   description: string | null
+  status: TaskStatus
+  source: TaskSource
   startAt: string | null
   endAt: string | null
   dueAt: string | null
+  reminderAt: string | null
 }
+
+const ACCENT_BORDERS = ['border-l-primary', 'border-l-tertiary', 'border-l-secondary'] as const
 
 // Based on ui/kalenteri/code.html
 export default function CalendarScreen() {
@@ -19,100 +32,137 @@ export default function CalendarScreen() {
   const scrollBottomPadding = useTabScrollBottomPadding()
   const [tasks, setTasks] = useState<Task[]>([])
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [viewDate, setViewDate] = useState(new Date())
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     apiFetch<{ tasks: Task[] }>('/api/tasks')
-      .then((data) => setTasks(data.tasks))
+      .then((data) => setTasks(data.tasks ?? []))
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
 
-  const dayTasks = tasks.filter((t) => {
-    const date = t.startAt ?? t.dueAt
-    if (!date) return false
-    const d = new Date(date)
-    return (
-      d.getDate() === selectedDate.getDate() &&
-      d.getMonth() === selectedDate.getMonth() &&
-      d.getFullYear() === selectedDate.getFullYear()
-    )
+  const dayTasks = useMemo(
+    () => filterTasksForDay(tasks, selectedDate),
+    [tasks, selectedDate],
+  )
+
+  const todayTaskCount = useMemo(
+    () => filterTasksForDay(tasks, new Date()).length,
+    [tasks],
+  )
+
+  const monthLabel = viewDate.toLocaleDateString('fi-FI', {
+    month: 'long',
+    year: 'numeric',
   })
 
-  const today = new Date()
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today)
-    d.setDate(today.getDate() - today.getDay() + 1 + i)
-    return d
-  })
+  function goToPrevMonth() {
+    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
+  }
+
+  function goToNextMonth() {
+    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
+  }
+
+  function handleDayPress(date: Date) {
+    setSelectedDate(date)
+    if (
+      date.getMonth() !== viewDate.getMonth() ||
+      date.getFullYear() !== viewDate.getFullYear()
+    ) {
+      setViewDate(new Date(date.getFullYear(), date.getMonth(), 1))
+    }
+  }
 
   return (
     <View className="flex-1 bg-background">
       <View className="border-b border-outline-variant bg-surface-container-lowest px-4 pb-4 pt-14">
-        <Text className="text-2xl font-bold text-on-surface">Kalenteri</Text>
-        <Text className="mt-1 text-sm text-on-surface-variant">
-          {selectedDate.toLocaleDateString('fi-FI', { month: 'long', year: 'numeric' })}
-        </Text>
+        <View className="flex-row items-center justify-between">
+          <View>
+            <Text className="text-2xl font-bold capitalize text-on-surface">{monthLabel}</Text>
+            <Text className="mt-1 text-sm text-on-surface-variant">
+              {isSameCalendarDay(selectedDate, new Date())
+                ? `${todayTaskCount} tehtävää tänään`
+                : `${dayTasks.length} tehtävää valittuna päivänä`}
+            </Text>
+          </View>
+          <View className="flex-row gap-2">
+            <Pressable
+              onPress={goToPrevMonth}
+              className="rounded-lg border border-outline-variant p-2"
+            >
+              <Text className="text-lg text-on-surface">‹</Text>
+            </Pressable>
+            <Pressable
+              onPress={goToNextMonth}
+              className="rounded-lg border border-outline-variant p-2"
+            >
+              <Text className="text-lg text-on-surface">›</Text>
+            </Pressable>
+          </View>
+        </View>
       </View>
 
-      <ScrollView horizontal className="border-b border-outline-variant px-2 py-3">
-        {days.map((day) => {
-          const isSelected =
-            day.getDate() === selectedDate.getDate() &&
-            day.getMonth() === selectedDate.getMonth()
-          const count = tasks.filter((t) => {
-            const d = new Date(t.startAt ?? t.dueAt ?? '')
-            return d.getDate() === day.getDate() && d.getMonth() === day.getMonth()
-          }).length
+      <ScrollView
+        className="flex-1 px-4 py-4"
+        contentContainerStyle={{ paddingBottom: scrollBottomPadding }}
+      >
+        <TaskCalendar
+          viewDate={viewDate}
+          selectedDate={selectedDate}
+          tasks={tasks}
+          onDayPress={handleDayPress}
+          onMonthChange={setViewDate}
+        />
 
-          return (
-            <Pressable
-              key={day.toISOString()}
-              onPress={() => setSelectedDate(day)}
-              className={`mx-1 items-center rounded-lg px-3 py-2 ${isSelected ? 'bg-primary' : ''}`}
-            >
-              <Text className={`text-xs ${isSelected ? 'text-on-primary' : 'text-on-surface-variant'}`}>
-                {day.toLocaleDateString('fi-FI', { weekday: 'short' })}
-              </Text>
-              <Text className={`text-lg font-bold ${isSelected ? 'text-on-primary' : 'text-on-surface'}`}>
-                {day.getDate()}
-              </Text>
-              {count > 0 && (
-                <View className={`mt-1 h-1 w-1 rounded-full ${isSelected ? 'bg-on-primary' : 'bg-primary'}`} />
-              )}
-            </Pressable>
-          )
-        })}
-      </ScrollView>
-
-      {loading ? (
-        <ActivityIndicator className="mt-8" color="#3525cd" />
-      ) : (
-        <ScrollView
-          className="flex-1 px-4 py-4"
-          contentContainerStyle={{ paddingBottom: scrollBottomPadding }}
-        >
-          <Text className="mb-3 font-semibold text-on-surface">
+        <View className="mt-6">
+          <Text className="mb-3 text-lg font-semibold capitalize text-on-surface">
             {selectedDate.toLocaleDateString('fi-FI', {
               weekday: 'long',
               day: 'numeric',
               month: 'long',
             })}
           </Text>
-          {dayTasks.map((task) => (
-            <Pressable
-              key={task.id}
-              onPress={() => router.push(`/task/${task.id}`)}
-              className="mb-3 rounded-xl border-l-4 border-l-primary border border-outline-variant bg-surface-container-lowest p-4"
-            >
-              <Text className="font-semibold text-on-surface">{task.title}</Text>
-              {task.description && (
-                <Text className="mt-1 text-sm text-on-surface-variant">{task.description}</Text>
-              )}
-            </Pressable>
-          ))}
-        </ScrollView>
-      )}
+
+          {loading ? (
+            <ActivityIndicator color="#3525cd" />
+          ) : dayTasks.length === 0 ? (
+            <Text className="py-8 text-center text-sm text-on-surface-variant">
+              Ei tehtäviä tälle päivälle
+            </Text>
+          ) : (
+            dayTasks.map((task, index) => {
+              const timeRange = formatTaskTimeRange(task.startAt, task.endAt, task.dueAt)
+              const accent = ACCENT_BORDERS[index % ACCENT_BORDERS.length]
+
+              return (
+                <Pressable
+                  key={task.id}
+                  onPress={() => router.push(`/task/${task.id}`)}
+                  className={`mb-3 flex-row overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest ${accent} border-l-4`}
+                >
+                  <View className="flex-1 p-4">
+                    <View className="mb-1 flex-row items-start justify-between gap-2">
+                      <Text className="flex-1 font-semibold text-on-surface">{task.title}</Text>
+                      {timeRange ? (
+                        <Text className="shrink-0 text-xs text-on-surface-variant">
+                          {timeRange}
+                        </Text>
+                      ) : null}
+                    </View>
+                    {task.description ? (
+                      <Text className="text-sm text-on-surface-variant" numberOfLines={2}>
+                        {task.description}
+                      </Text>
+                    ) : null}
+                  </View>
+                </Pressable>
+              )
+            })
+          )}
+        </View>
+      </ScrollView>
     </View>
   )
 }

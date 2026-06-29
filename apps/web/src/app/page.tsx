@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { BottomNav, ProgressRing, Button, bottomNavPaddingClass } from '@yksi/ui'
+import { ProgressRing, Button, bottomNavPaddingClass } from '@yksi/ui'
+import { LocalizedBottomNav } from '@/components/localized-bottom-nav'
 
 interface TodayTask {
   id: string
@@ -180,18 +181,7 @@ export default function DashboardPage() {
         </Button>
       </main>
 
-      <BottomNav
-        activeTab="dashboard"
-        onTabChange={(tab) => {
-          const routes: Record<string, string> = {
-            dashboard: '/',
-            tasks: '/tasks',
-            calendar: '/calendar',
-            profile: '/profile',
-          }
-          router.push(routes[tab] ?? '/')
-        }}
-      />
+      <LocalizedBottomNav activeTab="dashboard" />
     </div>
   )
 }

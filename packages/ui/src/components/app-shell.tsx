@@ -61,10 +61,11 @@ export function TopAppBar({
 export interface BottomNavProps {
   activeTab: string
   onTabChange: (tab: string) => void
+  labels?: Partial<Record<string, string>>
   className?: string
 }
 
-export function BottomNav({ activeTab, onTabChange, className }: BottomNavProps) {
+export function BottomNav({ activeTab, onTabChange, labels, className }: BottomNavProps) {
   return (
     <nav
       className={cn(
@@ -90,7 +91,7 @@ export function BottomNav({ activeTab, onTabChange, className }: BottomNavProps)
             >
               {item.icon}
             </span>
-            <span className="font-medium">{item.label}</span>
+            <span className="font-medium">{labels?.[item.id] ?? item.label}</span>
           </button>
         )
       })}

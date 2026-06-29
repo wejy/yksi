@@ -2,8 +2,10 @@ import { Tabs } from 'expo-router'
 import { Text, type ColorValue } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { TAB_BAR_HEIGHT } from '@/lib/layout'
+import { useI18n } from '@yksi/i18n/react'
 
 export default function TabLayout() {
+  const { t } = useI18n()
   const insets = useSafeAreaInsets()
   const tabBarPaddingBottom = Math.max(insets.bottom, 8)
 
@@ -25,28 +27,28 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Etusivu',
+          title: t('nav.dashboard'),
           tabBarIcon: ({ color }) => <TabIcon name="🏠" color={color} />,
         }}
       />
       <Tabs.Screen
         name="tasks"
         options={{
-          title: 'Tehtävät',
+          title: t('nav.tasks'),
           tabBarIcon: ({ color }) => <TabIcon name="✓" color={color} />,
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
-          title: 'Kalenteri',
+          title: t('nav.calendar'),
           tabBarIcon: ({ color }) => <TabIcon name="📅" color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profiili',
+          title: t('nav.profile'),
           tabBarIcon: ({ color }) => <TabIcon name="👤" color={color} />,
         }}
       />

@@ -3,9 +3,11 @@ import { cn } from '../lib/utils'
 export function AddTaskButton({
   onClick,
   className,
+  label = 'Lisää tehtävä',
 }: {
   onClick?: () => void
   className?: string
+  label?: string
 }) {
   return (
     <button
@@ -17,7 +19,7 @@ export function AddTaskButton({
       )}
     >
       <span className="material-symbols-outlined text-[20px] leading-none">add</span>
-      Lisää tehtävä
+      {label}
     </button>
   )
 }

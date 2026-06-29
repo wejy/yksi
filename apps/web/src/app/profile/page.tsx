@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { BottomNav, Button, bottomNavPaddingClass } from '@yksi/ui'
+import { Button, bottomNavPaddingClass } from '@yksi/ui'
 import { INTEGRATION_CATALOG, formatSyncResult, formatSyncError, getProviderLabel } from '@yksi/core'
 import { SyncOverlay } from '@/components/sync-overlay'
+import { LocalizedBottomNav } from '@/components/localized-bottom-nav'
+import { useI18n } from '@yksi/i18n/react'
 
 interface Connection {
   id: string
@@ -20,9 +22,9 @@ interface User {
 }
 
 const SETTINGS = [
-  { icon: 'person', label: 'Henkilötiedot' },
-  { icon: 'notifications_active', label: 'Ilmoitukset' },
-  { icon: 'palette', label: 'Teema' },
+  { icon: 'person', key: 'personalDetails' as const, href: '/profile/personal' },
+  { icon: 'notifications_active', key: 'notifications' as const },
+  { icon: 'palette', key: 'theme' as const },
 ]
 
 type ApiKeyProvider = 'linear' | 'notion'
@@ -68,6 +70,7 @@ const API_KEY_MODAL: Record<
 // Based on ui/profiili_ja_integraatiot/code.html
 export default function ProfilePage() {
   const router = useRouter()
+  const { t } = useI18n()
   const searchParams = useSearchParams()
   const [user, setUser] = useState<User | null>(null)
   const [connections, setConnections] = useState<Connection[]>([])
@@ -250,12 +253,12 @@ export default function ProfilePage() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-on-primary">
             Y
           </div>
-          <h1 className="text-xl font-bold text-primary">Profiili</h1>
+          <h1 className="text-xl font-bold text-primary">{t('profile.title')}</h1>
         </div>
         <button
           type="button"
           className="rounded-full p-2 hover:bg-surface-container-low"
-          aria-label="Ilmoitukset"
+          aria-label={t('common.notifications')}
         >
           <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
         </button>
@@ -280,40 +283,43 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-            <h2 className="text-2xl font-semibold text-on-surface">{user.name ?? 'Käyttäjä'}</h2>
+            <h2 className="text-2xl font-semibold text-on-surface">{user.name ?? t('common.user')}</h2>
             <p className="text-on-surface-variant">{user.email}</p>
             <span className="mt-2 inline-block rounded-full bg-surface-container px-3 py-0.5 text-xs font-medium capitalize">
-              {user.subscriptionTier === 'premium' ? 'Premium' : 'Ilmainen'}
+              {user.subscriptionTier === 'premium' ? t('profile.tierPremium') : t('profile.tierFree')}
             </span>
           </section>
         )}
 
         {user?.subscriptionTier === 'free' && (
           <section className="rounded-xl border border-primary/30 bg-primary/5 p-4">
-            <h3 className="font-semibold">Avaa rajattomat integraatiot</h3>
+            <h3 className="font-semibold">{t('profile.upgradeTitle')}</h3>
             <p className="mt-1 text-sm text-on-surface-variant">
-              Premium sisältää rajattomat integraatiot ja kehittyneet filtterit.
+              {t('profile.upgradeBody')}
             </p>
             <Button className="mt-3" onClick={handleUpgrade} disabled={upgrading}>
-              {upgrading ? 'Ladataan...' : 'Päivitä Premiumiin — 9 €/kk'}
+              {upgrading ? t('profile.upgradeLoading') : t('profile.upgradeCta')}
             </Button>
           </section>
         )}
 
         <section>
           <h3 className="mb-4 px-2 text-sm font-medium uppercase tracking-widest text-on-surface-variant">
-            Tilin asetukset
+            {t('profile.accountSettings')}
           </h3>
           <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
             {SETTINGS.map((item, i) => (
-              <div key={item.label}>
+              <div key={item.key}>
                 <button
                   type="button"
+                  onClick={() => {
+                    if (item.href) router.push(item.href)
+                  }}
                   className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-surface-container-low"
                 >
                   <div className="flex items-center gap-4">
                     <span className="material-symbols-outlined text-primary">{item.icon}</span>
-                    <span className="font-medium">{item.label}</span>
+                    <span className="font-medium">{t(`profile.${item.key}`)}</span>
                   </div>
                   <span className="material-symbols-outlined text-outline transition-transform group-hover:translate-x-1">
                     chevron_right
@@ -327,7 +333,7 @@ export default function ProfilePage() {
 
         <section>
           <h3 className="mb-4 px-2 text-sm font-medium uppercase tracking-widest text-on-surface-variant">
-            Integraatiot
+            {t('profile.integrations')}
           </h3>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {INTEGRATION_CATALOG.map((provider) => {
@@ -350,11 +356,11 @@ export default function ProfilePage() {
                     </div>
                     {!isAvailable ? (
                       <span className="rounded-full bg-surface-container px-3 py-1 text-xs font-medium text-on-surface-variant">
-                        Tulossa
+                        {t('profile.comingSoon')}
                       </span>
                     ) : connected ? (
                       <span className="rounded-full border border-primary-container bg-surface-container-high px-2 py-1 text-xs font-medium text-primary">
-                        Yhdistetty
+                        {t('profile.connected')}
                       </span>
                     ) : (
                       <button
@@ -362,7 +368,7 @@ export default function ProfilePage() {
                         onClick={() => handleConnect(provider.id)}
                         className="rounded-full bg-secondary-container px-3 py-1 text-xs font-medium text-on-secondary-container transition-colors hover:bg-outline-variant"
                       >
-                        Yhdistä
+                        {t('profile.connect')}
                       </button>
                     )}
                   </div>
@@ -376,7 +382,7 @@ export default function ProfilePage() {
                         disabled={syncingProvider === provider.id}
                         className="mt-3 w-full rounded-full border border-primary bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
                       >
-                        {syncingProvider === provider.id ? 'Synkronoidaan…' : 'Synkronoi nyt'}
+                        {syncingProvider === provider.id ? t('profile.syncing') : t('profile.syncNow')}
                       </button>
                     ) : null}
                   </div>
@@ -395,24 +401,13 @@ export default function ProfilePage() {
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-error-container py-4 font-semibold text-on-error-container transition-all hover:bg-error hover:text-on-error active:scale-95"
           >
             <span className="material-symbols-outlined">logout</span>
-            Kirjaudu ulos
+            {t('profile.signOut')}
           </button>
-          <p className="mt-4 text-center text-sm text-outline">Versio 1.0.0 (MVP)</p>
+          <p className="mt-4 text-center text-sm text-outline">{t('profile.version')}</p>
         </section>
       </main>
 
-      <BottomNav
-        activeTab="profile"
-        onTabChange={(tab) => {
-          const routes: Record<string, string> = {
-            dashboard: '/',
-            tasks: '/tasks',
-            calendar: '/calendar',
-            profile: '/profile',
-          }
-          router.push(routes[tab] ?? '/')
-        }}
-      />
+      <LocalizedBottomNav activeTab="profile" />
 
       {syncOverlay ? (
         <SyncOverlay
@@ -464,7 +459,7 @@ export default function ProfilePage() {
                 onClick={handleApiKeyConnect}
                 disabled={connectingApiKey || !apiKeyValue.trim()}
               >
-                {connectingApiKey ? 'Yhdistetään ja synkataan…' : 'Yhdistä'}
+                {connectingApiKey ? t('profile.syncing') : t('profile.connect')}
               </Button>
               <Button
                 variant="outline"
@@ -474,7 +469,7 @@ export default function ProfilePage() {
                   setApiKeyValue('')
                 }}
               >
-                Peruuta
+                {t('common.cancel')}
               </Button>
             </div>
           </div>

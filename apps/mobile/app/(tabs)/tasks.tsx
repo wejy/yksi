@@ -20,6 +20,7 @@ import {
   type TaskSource,
   type TaskSortBy,
   type TaskSortOrder,
+  type TaskStatus,
 } from '@yksi/core'
 import { useTabScrollBottomPadding } from '@/lib/layout'
 import { TaskSearchBar } from '@/components/task-search-bar'
@@ -41,6 +42,23 @@ interface Task {
   labels: string[]
   sourceDetail: LinearTaskSourceDetail | null
   yhteispinta: { name: string } | null
+}
+
+const STATUS_LABELS: Record<TaskStatus, string> = {
+  open: 'Avoin',
+  in_progress: 'Käynnissä',
+  done: 'Valmis',
+  cancelled: 'Peruttu',
+}
+
+const SOURCE_BADGE_STYLES: Record<
+  TaskSource,
+  { container: string; text: string }
+> = {
+  linear: { container: 'bg-[#5E6AD2]/10', text: 'text-[#5E6AD2]' },
+  notion: { container: 'bg-surface-container', text: 'text-on-surface-variant' },
+  google_calendar: { container: 'bg-tertiary-container/30', text: 'text-tertiary' },
+  native: { container: 'bg-primary/10', text: 'text-primary' },
 }
 
 // Based on ui/teht_v_lista/code.html
@@ -229,9 +247,13 @@ export default function TasksScreen() {
           ) : (
             tasks.map((task) => {
               const sourceMeta = getTaskSourceMeta(task.source)
+              const sourceBadge = SOURCE_BADGE_STYLES[task.source]
+              const statusLabel = STATUS_LABELS[task.status as TaskStatus] ?? STATUS_LABELS.open
               const intressiName = task.yhteispinta?.name ?? task.sourceDetail?.projectName
               const visibleLabels = task.labels?.slice(0, 3) ?? []
               const extraLabels = (task.labels?.length ?? 0) - visibleLabels.length
+              const hasFooterMeta =
+                !!task.dueAt || !!intressiName || !!(task.sourceDetail?.teamName && !intressiName)
 
               return (
                 <Pressable
@@ -239,35 +261,28 @@ export default function TasksScreen() {
                   onPress={() => router.push(`/task/${task.id}`)}
                   className="mb-3 rounded-xl border border-outline-variant bg-surface-container-lowest p-4"
                 >
-                  <View className="mb-1 flex-row flex-wrap items-center gap-2">
-                    <View className="rounded-full bg-surface-container px-2 py-0.5">
-                      <Text className="text-[11px] font-semibold uppercase text-on-surface-variant">
-                        {sourceMeta.label}
-                      </Text>
-                    </View>
-                    {task.sourceDetail?.stateName ? (
-                      <View className="rounded-full bg-surface-container px-2 py-0.5">
-                        <Text className="text-[11px] text-on-surface-variant">
-                          {task.sourceDetail.stateName}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-
-                  <View className="flex-row items-start justify-between">
+                  <View className="flex-row items-start justify-between gap-2">
                     <Text
                       className={`flex-1 font-semibold text-on-surface ${task.status === 'done' ? 'line-through opacity-60' : ''}`}
                     >
                       {task.title}
                     </Text>
-                    {task.priority !== 'none' && (
-                      <View className="ml-2 rounded-full bg-error/10 px-2 py-0.5">
-                        <Text className="text-xs font-medium text-error">
-                          {task.priority === 'high' || task.priority === 'urgent' ? 'Korkea' : 'Normaali'}
-                        </Text>
-                      </View>
-                    )}
+                    <View className="shrink-0 rounded bg-surface-container px-1.5 py-0.5">
+                      <Text className="text-[10px] font-medium text-on-surface-variant">
+                        {statusLabel}
+                      </Text>
+                    </View>
                   </View>
+
+                  {task.priority !== 'none' ? (
+                    <View className="mt-1 self-start rounded-full bg-error/10 px-2 py-0.5">
+                      <Text className="text-[10px] font-medium text-error">
+                        {task.priority === 'high' || task.priority === 'urgent'
+                          ? 'Korkea'
+                          : 'Normaali'}
+                      </Text>
+                    </View>
+                  ) : null}
 
                   {task.description ? (
                     <Text className="mt-1 text-sm text-on-surface-variant" numberOfLines={2}>
@@ -290,20 +305,35 @@ export default function TasksScreen() {
                     </View>
                   ) : null}
 
-                  <View className="mt-2 flex-row flex-wrap gap-3">
-                    {task.dueAt ? (
-                      <Text className="text-xs text-on-surface-variant">
-                        {new Date(task.dueAt).toLocaleDateString('fi-FI')}
+                  <View className="mt-2 flex-row items-end justify-between gap-2">
+                    {hasFooterMeta ? (
+                      <View className="min-w-0 flex-1 flex-row flex-wrap gap-3">
+                        {task.dueAt ? (
+                          <Text className="text-xs text-on-surface-variant">
+                            {new Date(task.dueAt).toLocaleDateString('fi-FI')}
+                          </Text>
+                        ) : null}
+                        {intressiName ? (
+                          <Text className="text-xs font-medium text-on-surface">
+                            {INTRESSI_LABEL}: {intressiName}
+                          </Text>
+                        ) : null}
+                        {task.sourceDetail?.teamName && !intressiName ? (
+                          <Text className="text-xs text-on-surface-variant">
+                            {task.sourceDetail.teamName}
+                          </Text>
+                        ) : null}
+                      </View>
+                    ) : (
+                      <View className="flex-1" />
+                    )}
+                    <View className={`shrink-0 rounded-full px-1.5 py-0.5 ${sourceBadge.container}`}>
+                      <Text
+                        className={`text-[9px] font-semibold uppercase tracking-wide ${sourceBadge.text}`}
+                      >
+                        {sourceMeta.label}
                       </Text>
-                    ) : null}
-                    {intressiName ? (
-                      <Text className="text-xs font-medium text-on-surface">
-                        {INTRESSI_LABEL}: {intressiName}
-                      </Text>
-                    ) : null}
-                    {task.sourceDetail?.teamName && !intressiName ? (
-                      <Text className="text-xs text-on-surface-variant">{task.sourceDetail.teamName}</Text>
-                    ) : null}
+                    </View>
                   </View>
                 </Pressable>
               )

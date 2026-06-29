@@ -4,11 +4,17 @@ import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   TopAppBar,
-  BottomNav,
-  CalendarGrid,
+  TaskMonthCalendar,
   TaskCard,
   bottomNavPaddingClass,
 } from '@yksi/ui'
+import { LocalizedBottomNav } from '@/components/localized-bottom-nav'
+import {
+  filterTasksForDay,
+  formatTaskTimeRange,
+  isSameCalendarDay,
+  type TaskSource,
+} from '@yksi/core'
 
 interface Task {
   id: string
@@ -16,9 +22,11 @@ interface Task {
   description: string | null
   priority: 'none' | 'low' | 'medium' | 'high' | 'urgent'
   status: 'open' | 'in_progress' | 'done' | 'cancelled'
+  source: TaskSource
   startAt: string | null
   endAt: string | null
   dueAt: string | null
+  reminderAt: string | null
 }
 
 // Based on ui/kalenteri/code.html
@@ -35,45 +43,30 @@ export default function CalendarPage() {
       .catch(console.error)
   }, [])
 
-  const calendarDays = useMemo(() => {
-    const year = viewDate.getFullYear()
-    const month = viewDate.getMonth()
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const startPad = (firstDay.getDay() + 6) % 7
-    const days = []
+  const dayTasks = useMemo(
+    () => filterTasksForDay(tasks, selectedDate),
+    [tasks, selectedDate],
+  )
 
-    for (let i = startPad - 1; i >= 0; i--) {
-      const d = new Date(year, month, -i)
-      days.push(makeDay(d, false, tasks, selectedDate))
-    }
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      const date = new Date(year, month, d)
-      days.push(makeDay(date, true, tasks, selectedDate))
-    }
-    const remaining = 42 - days.length
-    for (let i = 1; i <= remaining; i++) {
-      const d = new Date(year, month + 1, i)
-      days.push(makeDay(d, false, tasks, selectedDate))
-    }
-    return days
-  }, [viewDate, tasks, selectedDate])
-
-  const dayTasks = tasks.filter((t) => {
-    const date = t.startAt ?? t.dueAt
-    if (!date) return false
-    const d = new Date(date)
-    return (
-      d.getDate() === selectedDate.getDate() &&
-      d.getMonth() === selectedDate.getMonth() &&
-      d.getFullYear() === selectedDate.getFullYear()
-    )
-  })
+  const todayTaskCount = useMemo(
+    () => filterTasksForDay(tasks, new Date()).length,
+    [tasks],
+  )
 
   const monthName = viewDate.toLocaleDateString('fi-FI', {
     month: 'long',
     year: 'numeric',
   })
+
+  function handleSelectDate(date: Date) {
+    setSelectedDate(date)
+    if (
+      date.getMonth() !== viewDate.getMonth() ||
+      date.getFullYear() !== viewDate.getFullYear()
+    ) {
+      setViewDate(new Date(date.getFullYear(), date.getMonth(), 1))
+    }
+  }
 
   return (
     <div className={`mx-auto min-h-screen max-w-2xl pt-16 ${bottomNavPaddingClass}`}>
@@ -84,114 +77,82 @@ export default function CalendarPage() {
           <div>
             <h2 className="text-xl font-bold capitalize text-on-surface">{monthName}</h2>
             <p className="text-sm text-on-surface-variant">
-              {dayTasks.length} tehtävää valittuna päivänä
+              {isSameCalendarDay(selectedDate, new Date())
+                ? `${todayTaskCount} tehtävää tänään`
+                : `${dayTasks.length} tehtävää valittuna päivänä`}
             </p>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             <button
               type="button"
               onClick={() =>
                 setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
               }
-              className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-container-low"
+              className="rounded-lg border border-outline-variant p-2 transition-colors hover:bg-surface-container-low"
+              aria-label="Edellinen kuukausi"
             >
-              <span className="material-symbols-outlined">chevron_left</span>
+              <span className="material-symbols-outlined text-on-surface">chevron_left</span>
             </button>
             <button
               type="button"
               onClick={() =>
                 setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
               }
-              className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-container-low"
+              className="rounded-lg border border-outline-variant p-2 transition-colors hover:bg-surface-container-low"
+              aria-label="Seuraava kuukausi"
             >
-              <span className="material-symbols-outlined">chevron_right</span>
+              <span className="material-symbols-outlined text-on-surface">chevron_right</span>
             </button>
           </div>
         </div>
 
-        <CalendarGrid
-          days={calendarDays}
-          onDayClick={(date) => setSelectedDate(date)}
+        <TaskMonthCalendar
+          viewDate={viewDate}
+          selectedDate={selectedDate}
+          tasks={tasks}
+          onSelectDate={handleSelectDate}
+          onMonthChange={setViewDate}
         />
 
         <section>
-          <h3 className="mb-3 font-semibold text-on-surface">
+          <h3 className="mb-3 font-semibold capitalize text-on-surface">
             {selectedDate.toLocaleDateString('fi-FI', {
               weekday: 'long',
               day: 'numeric',
               month: 'long',
             })}
           </h3>
-          <div className="space-y-3">
-            {dayTasks.map((task, i) => {
-              const start = task.startAt ? new Date(task.startAt) : null
-              const end = task.endAt ? new Date(task.endAt) : null
-              const timeRange =
-                start && end
-                  ? `${start.toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' })} – ${end.toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' })}`
-                  : undefined
-              const accents = ['primary', 'tertiary', 'secondary'] as const
-              return (
-                <TaskCard
-                  key={task.id}
-                  id={task.id}
-                  title={task.title}
-                  description={task.description}
-                  priority={task.priority}
-                  status={task.status}
-                  timeRange={timeRange}
-                  accentColor={accents[i % accents.length]}
-                  onClick={(id) => router.push(`/task/${id}`)}
-                />
-              )
-            })}
-          </div>
+          {dayTasks.length === 0 ? (
+            <p className="py-8 text-center text-sm text-on-surface-variant">
+              Ei tehtäviä tälle päivälle
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {dayTasks.map((task, i) => {
+                const timeRange =
+                  formatTaskTimeRange(task.startAt, task.endAt, task.dueAt) ?? undefined
+                const accents = ['primary', 'tertiary', 'secondary'] as const
+                return (
+                  <TaskCard
+                    key={task.id}
+                    id={task.id}
+                    title={task.title}
+                    description={task.description}
+                    priority={task.priority}
+                    status={task.status}
+                    source={task.source}
+                    timeRange={timeRange}
+                    accentColor={accents[i % accents.length]}
+                    onClick={(id) => router.push(`/task/${id}`)}
+                  />
+                )
+              })}
+            </div>
+          )}
         </section>
       </main>
 
-      <BottomNav
-        activeTab="calendar"
-        onTabChange={(tab) => {
-          const routes: Record<string, string> = {
-            dashboard: '/',
-            tasks: '/tasks',
-            calendar: '/calendar',
-            profile: '/profile',
-          }
-          router.push(routes[tab] ?? '/')
-        }}
-      />
+      <LocalizedBottomNav activeTab="calendar" />
     </div>
   )
-}
-
-function makeDay(
-  date: Date,
-  isCurrentMonth: boolean,
-  tasks: Task[],
-  selected: Date,
-) {
-  const today = new Date()
-  const taskCount = tasks.filter((t) => {
-    const d = new Date(t.startAt ?? t.dueAt ?? '')
-    return (
-      d.getDate() === date.getDate() &&
-      d.getMonth() === date.getMonth() &&
-      d.getFullYear() === date.getFullYear()
-    )
-  }).length
-
-  return {
-    date,
-    isCurrentMonth,
-    isToday:
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear(),
-    isSelected:
-      date.getDate() === selected.getDate() &&
-      date.getMonth() === selected.getMonth() &&
-      date.getFullYear() === selected.getFullYear(),
-    taskCount,
-  }
 }

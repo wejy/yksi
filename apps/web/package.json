@@ -17,6 +17,7 @@
     "@neondatabase/serverless": "^1.1.0",
     "@yksi/core": "workspace:*",
     "@yksi/db": "workspace:*",
+    "@yksi/i18n": "workspace:*",
     "@yksi/integrations": "workspace:*",
     "@yksi/ui": "workspace:*",
     "better-auth": "^1.6.22",

@@ -8,9 +8,11 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native'
+import { useRouter, type Href } from 'expo-router'
 import { apiFetch } from '@/lib/api'
 import { INTEGRATION_CATALOG, YKSI_DEV_URL, formatSyncResult, formatSyncError, getProviderLabel } from '@yksi/core'
 import { useTabScrollBottomPadding } from '@/lib/layout'
+import { useI18n } from '@yksi/i18n/react'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? YKSI_DEV_URL
 
@@ -36,6 +38,8 @@ interface User {
 
 // Based on ui/profiili_ja_integraatiot/code.html
 export default function ProfileScreen() {
+  const router = useRouter()
+  const { t } = useI18n()
   const scrollBottomPadding = useTabScrollBottomPadding()
   const [user, setUser] = useState<User | null>(null)
   const [connections, setConnections] = useState<Connection[]>([])
@@ -77,7 +81,7 @@ export default function ProfileScreen() {
   return (
     <View className="flex-1 bg-background">
       <View className="border-b border-outline-variant bg-surface-container-lowest px-4 pb-4 pt-14">
-        <Text className="text-xl font-bold text-primary">Profiili</Text>
+        <Text className="text-xl font-bold text-primary">{t('profile.title')}</Text>
       </View>
 
       <ScrollView
@@ -97,10 +101,10 @@ export default function ProfileScreen() {
                 {(user.name ?? user.email)[0]?.toUpperCase()}
               </Text>
             </View>
-            <Text className="text-2xl font-semibold text-on-surface">{user.name ?? 'Käyttäjä'}</Text>
+            <Text className="text-2xl font-semibold text-on-surface">{user.name ?? t('common.user')}</Text>
             <Text className="text-on-surface-variant">{user.email}</Text>
             <Text className="mt-2 text-xs font-medium capitalize text-primary">
-              {user.subscriptionTier === 'premium' ? 'Premium' : 'Ilmainen'}
+              {user.subscriptionTier === 'premium' ? t('profile.tierPremium') : t('profile.tierFree')}
             </Text>
           </View>
         )}
@@ -110,30 +114,39 @@ export default function ProfileScreen() {
             onPress={() => Linking.openURL(`${API_URL}/profile`)}
             className="mb-8 rounded-xl border border-primary/30 bg-primary/5 p-4"
           >
-            <Text className="font-semibold text-on-surface">Avaa rajattomat integraatiot</Text>
-            <Text className="mt-1 text-sm text-on-surface-variant">
-              Päivitä Premiumiin — 9 €/kk
-            </Text>
+            <Text className="font-semibold text-on-surface">{t('profile.upgradeTitle')}</Text>
+            <Text className="mt-1 text-sm text-on-surface-variant">{t('profile.upgradeCta')}</Text>
           </Pressable>
         )}
 
         <Text className="mb-3 px-2 text-xs font-medium uppercase tracking-widest text-on-surface-variant">
-          Tilin asetukset
+          {t('profile.accountSettings')}
         </Text>
         <View className="mb-8 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
-          {['Henkilötiedot', 'Ilmoitukset', 'Teema'].map((label, i) => (
-            <View key={label}>
-              <Pressable className="flex-row items-center justify-between p-4">
-                <Text className="font-medium text-on-surface">{label}</Text>
+          {(
+            [
+              { key: 'personalDetails', href: '/profile/personal' },
+              { key: 'notifications' },
+              { key: 'theme' },
+            ] as const
+          ).map((item, i, arr) => (
+            <View key={item.key}>
+              <Pressable
+                className="flex-row items-center justify-between p-4"
+                onPress={() => {
+                  if ('href' in item) router.push(item.href as Href)
+                }}
+              >
+                <Text className="font-medium text-on-surface">{t(`profile.${item.key}`)}</Text>
                 <Text className="text-on-surface-variant">›</Text>
               </Pressable>
-              {i < 2 && <View className="mx-4 h-px bg-outline-variant" />}
+              {i < arr.length - 1 && <View className="mx-4 h-px bg-outline-variant" />}
             </View>
           ))}
         </View>
 
         <Text className="mb-3 px-2 text-xs font-medium uppercase tracking-widest text-on-surface-variant">
-          Integraatiot
+          {t('profile.integrations')}
         </Text>
         {INTEGRATION_CATALOG.map((provider) => {
           const connected = isConnected(provider.id)
@@ -150,11 +163,11 @@ export default function ProfileScreen() {
                 </View>
                 {!isAvailable ? (
                   <View className="rounded-full bg-surface-container px-3 py-1">
-                    <Text className="text-xs font-medium text-on-surface-variant">Tulossa</Text>
+                    <Text className="text-xs font-medium text-on-surface-variant">{t('profile.comingSoon')}</Text>
                   </View>
                 ) : connected ? (
                   <View className="rounded-full border border-primary-container bg-surface-container-high px-3 py-1">
-                    <Text className="text-xs font-medium text-primary">Yhdistetty</Text>
+                    <Text className="text-xs font-medium text-primary">{t('profile.connected')}</Text>
                   </View>
                 ) : (
                   <Pressable
@@ -163,7 +176,7 @@ export default function ProfileScreen() {
                     }
                     className="rounded-full bg-secondary-container px-3 py-1"
                   >
-                    <Text className="text-xs font-medium text-on-secondary-container">Yhdistä</Text>
+                    <Text className="text-xs font-medium text-on-secondary-container">{t('profile.connect')}</Text>
                   </Pressable>
                 )}
               </View>
@@ -176,7 +189,7 @@ export default function ProfileScreen() {
                   className="mt-3 items-center rounded-full border border-primary bg-primary/5 px-3 py-2 disabled:opacity-60"
                 >
                   <Text className="text-xs font-semibold text-primary">
-                    {syncingProvider === provider.id ? 'Synkronoidaan…' : 'Synkronoi nyt'}
+                    {syncingProvider === provider.id ? t('profile.syncing') : t('profile.syncNow')}
                   </Text>
                 </Pressable>
               ) : null}
@@ -185,9 +198,9 @@ export default function ProfileScreen() {
         })}
 
         <Pressable className="mt-6 items-center rounded-xl bg-error-container py-4">
-          <Text className="font-semibold text-on-error-container">Kirjaudu ulos</Text>
+          <Text className="font-semibold text-on-error-container">{t('profile.signOut')}</Text>
         </Pressable>
-        <Text className="mt-4 text-center text-sm text-outline">Versio 1.0.0 (MVP)</Text>
+        <Text className="mt-4 text-center text-sm text-outline">{t('profile.version')}</Text>
       </ScrollView>
 
       <Modal visible={syncingProvider !== null} transparent animationType="fade">

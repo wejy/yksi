@@ -15,7 +15,8 @@ export {
   IntressiFilter,
   type IntressiFilterOption,
 } from './components/intressi-filter'
-export { CalendarGrid, ProgressRing } from './components/calendar'
+export { TaskMonthCalendar } from './components/task-month-calendar'
+export { ProgressRing } from './components/calendar'
 export { BentoSettingCard, SubtaskList } from './components/task-detail'
 export { cn } from './lib/utils'
 export * from './tokens'
