@@ -11,6 +11,8 @@ const querySchema = z.object({
   dueBefore: z.string().datetime().optional(),
   dueAfter: z.string().datetime().optional(),
   search: z.string().optional(),
+  sortBy: z.enum(['created_at', 'due_at', 'priority', 'source']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
   limit: z.coerce.number().optional(),
   offset: z.coerce.number().optional(),
 })

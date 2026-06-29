@@ -13,9 +13,14 @@ import {
 } from '@yksi/ui'
 import {
   TASKS_LIST_PAGE_SIZE,
+  DEFAULT_TASK_SORT_BY,
+  DEFAULT_TASK_SORT_ORDER,
   type LinearTaskSourceDetail,
   type TaskSource,
+  type TaskSortBy,
+  type TaskSortOrder,
 } from '@yksi/core'
+import type { TaskSortState } from '@yksi/ui'
 
 interface Intressi {
   id: string
@@ -44,6 +49,10 @@ export default function TasksPage() {
   const [intressit, setIntressit] = useState<Intressi[]>([])
   const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<TaskSortState>({
+    sortBy: DEFAULT_TASK_SORT_BY,
+    sortOrder: DEFAULT_TASK_SORT_ORDER,
+  })
   const [activeIntressiId, setActiveIntressiId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -58,7 +67,14 @@ export default function TasksPage() {
   }, [])
 
   const fetchPage = useCallback(
-    async (offset: number, searchQuery: string, intressiId: string | null, append: boolean) => {
+    async (
+      offset: number,
+      searchQuery: string,
+      intressiId: string | null,
+      sortBy: TaskSortBy,
+      sortOrder: TaskSortOrder,
+      append: boolean,
+    ) => {
       if (append) {
         setLoadingMore(true)
       } else {
@@ -71,6 +87,8 @@ export default function TasksPage() {
         params.set('offset', String(offset))
         if (searchQuery.trim()) params.set('search', searchQuery.trim())
         if (intressiId) params.set('yhteispintaId', intressiId)
+        params.set('sortBy', sortBy)
+        params.set('sortOrder', sortOrder)
 
         const res = await fetch(`/api/tasks?${params}`)
         const data = await res.json()
@@ -91,13 +109,13 @@ export default function TasksPage() {
   )
 
   useEffect(() => {
-    fetchPage(0, search, activeIntressiId, false)
-  }, [search, activeIntressiId, fetchPage])
+    fetchPage(0, search, activeIntressiId, sort.sortBy, sort.sortOrder, false)
+  }, [search, activeIntressiId, sort.sortBy, sort.sortOrder, fetchPage])
 
   const loadMore = useCallback(() => {
     if (loading || loadingMore || !hasMore) return
-    fetchPage(tasks.length, search, activeIntressiId, true)
-  }, [loading, loadingMore, hasMore, tasks.length, search, activeIntressiId, fetchPage])
+    fetchPage(tasks.length, search, activeIntressiId, sort.sortBy, sort.sortOrder, true)
+  }, [loading, loadingMore, hasMore, tasks.length, search, activeIntressiId, sort.sortBy, sort.sortOrder, fetchPage])
 
   useEffect(() => {
     const sentinel = loadMoreRef.current
@@ -136,7 +154,12 @@ export default function TasksPage() {
           </div>
         </div>
 
-        <SearchBar value={search} onChange={setSearch} onFilter={() => {}} />
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          sort={sort}
+          onSortChange={setSort}
+        />
 
         {intressit.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-1">

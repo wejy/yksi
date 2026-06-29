@@ -63,6 +63,8 @@ export interface TaskFilters {
   dueBefore?: Date
   dueAfter?: Date
   search?: string
+  sortBy?: import('./task-sort').TaskSortBy
+  sortOrder?: import('./task-sort').TaskSortOrder
   limit?: number
   offset?: number
 }

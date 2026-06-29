@@ -10,7 +10,7 @@ import {
   asc,
 } from 'drizzle-orm'
 import { getDb, tasks, yhteispinnat } from '@yksi/db'
-import type { TaskFilters, TaskContentDocument, TaskSource } from '@yksi/core'
+import type { TaskFilters, TaskContentDocument, TaskSource, TaskSortBy, TaskSortOrder } from '@yksi/core'
 import { normalizeTaskContent, taskContentFromMarkdown, taskContentToPlainText, getLinearTaskSourceDetail } from '@yksi/core'
 
 function mapTaskRow<T extends {
@@ -49,6 +49,29 @@ function hydrateTaskContent<T extends { description: string | null; contentDocum
   return { ...task, contentDocument: null }
 }
 
+function buildTaskOrder(sortBy?: TaskSortBy, sortOrder?: TaskSortOrder) {
+  const tiebreaker = asc(tasks.id)
+
+  if (!sortBy) {
+    return [desc(tasks.priority), asc(tasks.dueAt), tiebreaker]
+  }
+
+  const dir = sortOrder === 'asc' ? asc : desc
+
+  switch (sortBy) {
+    case 'created_at':
+      return [dir(tasks.createdAt), tiebreaker]
+    case 'due_at':
+      return [dir(tasks.dueAt), tiebreaker]
+    case 'priority':
+      return [dir(tasks.priority), tiebreaker]
+    case 'source':
+      return [dir(tasks.source), tiebreaker]
+    default:
+      return [desc(tasks.priority), asc(tasks.dueAt), tiebreaker]
+  }
+}
+
 export async function listTasks(userId: string, filters: TaskFilters = {}) {
   const db = getDb()
   const conditions = [eq(tasks.userId, userId)]
@@ -81,7 +104,7 @@ export async function listTasks(userId: string, filters: TaskFilters = {}) {
       .from(tasks)
       .leftJoin(yhteispinnat, eq(tasks.yhteispintaId, yhteispinnat.id))
       .where(and(...conditions))
-      .orderBy(desc(tasks.priority), asc(tasks.dueAt), asc(tasks.id))
+      .orderBy(...buildTaskOrder(filters.sortBy, filters.sortOrder))
       .limit(limit)
       .offset(offset),
     db

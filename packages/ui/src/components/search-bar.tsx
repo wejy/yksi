@@ -1,24 +1,57 @@
-import * as React from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { cn } from '../lib/utils'
 import { fabOffsetClass } from '../tokens'
+import {
+  TASK_SORT_BY_OPTIONS,
+  TASK_SORT_ORDER_OPTIONS,
+  type TaskSortBy,
+  type TaskSortOrder,
+} from '@yksi/core'
+
+export interface TaskSortState {
+  sortBy: TaskSortBy
+  sortOrder: TaskSortOrder
+}
 
 export function SearchBar({
   value,
   onChange,
-  onFilter,
   placeholder = 'Etsi tehtäviä...',
   className,
+  sort,
+  onSortChange,
 }: {
   value: string
   onChange: (value: string) => void
-  onFilter?: () => void
   placeholder?: string
   className?: string
+  sort?: TaskSortState
+  onSortChange?: (sort: TaskSortState) => void
 }) {
+  const [sortOpen, setSortOpen] = useState(false)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const sortPanelId = useId()
+
+  useEffect(() => {
+    if (!sortOpen) return
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!panelRef.current?.contains(event.target as Node)) {
+        setSortOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    return () => document.removeEventListener('mousedown', handlePointerDown)
+  }, [sortOpen])
+
   return (
-    <div className={cn('flex gap-2', className)}>
-      <div className="relative flex-1">
-        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+    <div className={cn('relative flex gap-2', className)} ref={panelRef}>
+      <div className="relative min-w-0 flex-1">
+        <span
+          className="material-symbols-outlined pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] leading-none text-on-surface-variant"
+          aria-hidden
+        >
           search
         </span>
         <input
@@ -26,19 +59,70 @@ export function SearchBar({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="h-10 w-full rounded-full border border-outline-variant bg-surface-container-low pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-11 w-full rounded-xl border border-outline-variant bg-surface-container-low py-2.5 pl-11 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant/80 focus:outline-none focus:ring-2 focus:ring-primary"
         />
       </div>
-      {onFilter && (
-        <button
-          type="button"
-          onClick={onFilter}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-outline-variant hover:bg-surface-container-low"
-          aria-label="Suodata"
-        >
-          <span className="material-symbols-outlined">filter_list</span>
-        </button>
-      )}
+
+      {sort && onSortChange ? (
+        <>
+          <button
+            type="button"
+            onClick={() => setSortOpen((open) => !open)}
+            className={cn(
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-outline-variant transition-colors hover:bg-surface-container-low',
+              sortOpen && 'border-primary/40 bg-surface-container-low',
+            )}
+            aria-label="Järjestä tehtävät"
+            aria-expanded={sortOpen}
+            aria-controls={sortPanelId}
+          >
+            <span className="material-symbols-outlined text-[22px] leading-none">sort</span>
+          </button>
+
+          {sortOpen ? (
+            <div
+              id={sortPanelId}
+              className="absolute right-0 top-full z-30 mt-2 w-[min(100%,18rem)] rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-lg"
+            >
+              <p className="mb-3 text-sm font-semibold text-on-surface">Järjestä</p>
+
+              <label className="mb-1 block text-xs font-medium text-on-surface-variant">
+                Järjestys
+              </label>
+              <select
+                value={sort.sortBy}
+                onChange={(e) =>
+                  onSortChange({ ...sort, sortBy: e.target.value as TaskSortBy })
+                }
+                className="mb-3 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2 text-sm text-on-surface"
+              >
+                {TASK_SORT_BY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              <label className="mb-1 block text-xs font-medium text-on-surface-variant">
+                Suunta
+              </label>
+              <select
+                value={sort.sortOrder}
+                onChange={(e) =>
+                  onSortChange({ ...sort, sortOrder: e.target.value as TaskSortOrder })
+                }
+                className="w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2 text-sm text-on-surface"
+              >
+                {TASK_SORT_ORDER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+        </>
+      ) : null}
     </div>
   )
 }

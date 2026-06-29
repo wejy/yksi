@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   Pressable,
-  TextInput,
   ActivityIndicator,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
@@ -14,11 +13,16 @@ import { apiFetch } from '@/lib/api'
 import {
   TASKS_LIST_PAGE_SIZE,
   INTRESSI_LABEL,
+  DEFAULT_TASK_SORT_BY,
+  DEFAULT_TASK_SORT_ORDER,
   getTaskSourceMeta,
   type LinearTaskSourceDetail,
   type TaskSource,
+  type TaskSortBy,
+  type TaskSortOrder,
 } from '@yksi/core'
 import { useTabScrollBottomPadding, FAB_SCROLL_EXTRA } from '@/lib/layout'
+import { TaskListToolbar, type TaskSortState } from '@/components/task-list-toolbar'
 
 interface Intressi {
   id: string
@@ -47,6 +51,10 @@ export default function TasksScreen() {
   const [activeIntressiId, setActiveIntressiId] = useState<string | null>(null)
   const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<TaskSortState>({
+    sortBy: DEFAULT_TASK_SORT_BY,
+    sortOrder: DEFAULT_TASK_SORT_ORDER,
+  })
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
@@ -59,7 +67,14 @@ export default function TasksScreen() {
   }, [])
 
   const fetchPage = useCallback(
-    async (offset: number, searchQuery: string, intressiId: string | null, append: boolean) => {
+    async (
+      offset: number,
+      searchQuery: string,
+      intressiId: string | null,
+      sortBy: TaskSortBy,
+      sortOrder: TaskSortOrder,
+      append: boolean,
+    ) => {
       if (append) {
         setLoadingMore(true)
         loadingMoreRef.current = true
@@ -73,6 +88,8 @@ export default function TasksScreen() {
         params.set('offset', String(offset))
         if (searchQuery.trim()) params.set('search', searchQuery.trim())
         if (intressiId) params.set('yhteispintaId', intressiId)
+        params.set('sortBy', sortBy)
+        params.set('sortOrder', sortOrder)
 
         const data = await apiFetch<{ tasks: Task[]; total: number }>(`/api/tasks?${params}`)
         const page = data.tasks ?? []
@@ -93,13 +110,13 @@ export default function TasksScreen() {
   )
 
   useEffect(() => {
-    fetchPage(0, search, activeIntressiId, false)
-  }, [search, activeIntressiId, fetchPage])
+    fetchPage(0, search, activeIntressiId, sort.sortBy, sort.sortOrder, false)
+  }, [search, activeIntressiId, sort.sortBy, sort.sortOrder, fetchPage])
 
   const loadMore = useCallback(() => {
     if (loading || loadingMoreRef.current || !hasMore) return
-    fetchPage(tasks.length, search, activeIntressiId, true)
-  }, [loading, hasMore, tasks.length, search, activeIntressiId, fetchPage])
+    fetchPage(tasks.length, search, activeIntressiId, sort.sortBy, sort.sortOrder, true)
+  }, [loading, hasMore, tasks.length, search, activeIntressiId, sort.sortBy, sort.sortOrder, fetchPage])
 
   function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent
@@ -120,12 +137,14 @@ export default function TasksScreen() {
               ? `${total} intressissä «${activeIntressiName}» · ${tasks.length}/${total} ladattu`
               : `${tasks.length}/${total} ladattu`}
         </Text>
-        <TextInput
-          className="mt-3 rounded-full border border-outline-variant bg-surface-container-low px-4 py-2 text-sm"
-          placeholder="Etsi kaikista tehtävistä..."
-          value={search}
-          onChangeText={setSearch}
-        />
+        <View className="mt-3">
+          <TaskListToolbar
+            search={search}
+            onSearchChange={setSearch}
+            sort={sort}
+            onSortChange={setSort}
+          />
+        </View>
         {intressit.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
             <Pressable
