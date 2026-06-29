@@ -4,7 +4,17 @@ export { Card, CardHeader, CardTitle, CardContent } from './components/card'
 export { PriorityBadge } from './components/priority-badge'
 export { TaskCard } from './components/task-card'
 export { TopAppBar, BottomNav } from './components/app-shell'
-export { SearchBar, CategoryChip, Fab, type TaskSortState } from './components/search-bar'
+export { AddTaskButton } from './components/add-task-button'
+export { SearchBar, CategoryChip, Fab } from './components/search-bar'
+export {
+  TaskListControls,
+  type TaskSortState,
+  type TaskSourceFilterOption,
+} from './components/task-list-controls'
+export {
+  IntressiFilter,
+  type IntressiFilterOption,
+} from './components/intressi-filter'
 export { CalendarGrid, ProgressRing } from './components/calendar'
 export { BentoSettingCard, SubtaskList } from './components/task-detail'
 export { cn } from './lib/utils'

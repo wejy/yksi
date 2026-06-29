@@ -21,13 +21,14 @@ import {
   type TaskSortBy,
   type TaskSortOrder,
 } from '@yksi/core'
-import { useTabScrollBottomPadding, FAB_SCROLL_EXTRA } from '@/lib/layout'
-import { TaskListToolbar, type TaskSortState } from '@/components/task-list-toolbar'
-
-interface Intressi {
-  id: string
-  name: string
-}
+import { useTabScrollBottomPadding } from '@/lib/layout'
+import { TaskSearchBar } from '@/components/task-search-bar'
+import { IntressiFilter, type IntressiFilterOption } from '@/components/intressi-filter'
+import {
+  TaskListControls,
+  type TaskSortState,
+  type TaskSourceFilterOption,
+} from '@/components/task-list-controls'
 
 interface Task {
   id: string
@@ -47,8 +48,10 @@ export default function TasksScreen() {
   const router = useRouter()
   const scrollBottomPadding = useTabScrollBottomPadding()
   const [tasks, setTasks] = useState<Task[]>([])
-  const [intressit, setIntressit] = useState<Intressi[]>([])
-  const [activeIntressiId, setActiveIntressiId] = useState<string | null>(null)
+  const [intressit, setIntressit] = useState<IntressiFilterOption[]>([])
+  const [availableSources, setAvailableSources] = useState<TaskSourceFilterOption[]>([])
+  const [activeIntressiIds, setActiveIntressiIds] = useState<string[]>([])
+  const [activeSources, setActiveSources] = useState<TaskSource[]>([])
   const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<TaskSortState>({
@@ -61,8 +64,20 @@ export default function TasksScreen() {
   const loadingMoreRef = useRef(false)
 
   useEffect(() => {
-    apiFetch<{ intressit: Intressi[] }>('/api/yhteispinnat?usedInTasks=true')
-      .then((data) => setIntressit(data.intressit ?? []))
+    apiFetch<{ intressit: IntressiFilterOption[] }>('/api/yhteispinnat?usedInTasks=true')
+      .then((data) =>
+        setIntressit(
+          (data.intressit ?? []).map((item) => ({
+            id: item.id,
+            name: item.name,
+            taskCount: item.taskCount ?? 0,
+          })),
+        ),
+      )
+      .catch(console.error)
+
+    apiFetch<{ sources: TaskSourceFilterOption[] }>('/api/tasks/sources')
+      .then((data) => setAvailableSources(data.sources ?? []))
       .catch(console.error)
   }, [])
 
@@ -70,7 +85,8 @@ export default function TasksScreen() {
     async (
       offset: number,
       searchQuery: string,
-      intressiId: string | null,
+      intressiIds: string[],
+      sources: TaskSource[],
       sortBy: TaskSortBy,
       sortOrder: TaskSortOrder,
       append: boolean,
@@ -87,7 +103,8 @@ export default function TasksScreen() {
         params.set('limit', String(TASKS_LIST_PAGE_SIZE))
         params.set('offset', String(offset))
         if (searchQuery.trim()) params.set('search', searchQuery.trim())
-        if (intressiId) params.set('yhteispintaId', intressiId)
+        if (intressiIds.length > 0) params.set('yhteispintaIds', intressiIds.join(','))
+        if (sources.length > 0) params.set('sources', sources.join(','))
         params.set('sortBy', sortBy)
         params.set('sortOrder', sortOrder)
 
@@ -110,13 +127,31 @@ export default function TasksScreen() {
   )
 
   useEffect(() => {
-    fetchPage(0, search, activeIntressiId, sort.sortBy, sort.sortOrder, false)
-  }, [search, activeIntressiId, sort.sortBy, sort.sortOrder, fetchPage])
+    fetchPage(0, search, activeIntressiIds, activeSources, sort.sortBy, sort.sortOrder, false)
+  }, [search, activeIntressiIds, activeSources, sort.sortBy, sort.sortOrder, fetchPage])
 
   const loadMore = useCallback(() => {
     if (loading || loadingMoreRef.current || !hasMore) return
-    fetchPage(tasks.length, search, activeIntressiId, sort.sortBy, sort.sortOrder, true)
-  }, [loading, hasMore, tasks.length, search, activeIntressiId, sort.sortBy, sort.sortOrder, fetchPage])
+    fetchPage(
+      tasks.length,
+      search,
+      activeIntressiIds,
+      activeSources,
+      sort.sortBy,
+      sort.sortOrder,
+      true,
+    )
+  }, [
+    loading,
+    hasMore,
+    tasks.length,
+    search,
+    activeIntressiIds,
+    activeSources,
+    sort.sortBy,
+    sort.sortOrder,
+    fetchPage,
+  ])
 
   function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent
@@ -124,7 +159,14 @@ export default function TasksScreen() {
     if (nearBottom) loadMore()
   }
 
-  const activeIntressiName = intressit.find((i) => i.id === activeIntressiId)?.name
+  const intressiSummary =
+    activeIntressiIds.length === 0
+      ? null
+      : activeIntressiIds.length === 1
+        ? intressit.find((i) => i.id === activeIntressiIds[0])?.name ?? null
+        : `${activeIntressiIds.length} intressiä`
+  const sourcesFiltered = activeSources.length > 0
+  const intressiFiltered = activeIntressiIds.length > 0
 
   return (
     <View className="flex-1 bg-background">
@@ -133,45 +175,36 @@ export default function TasksScreen() {
         <Text className="mt-1 text-sm text-on-surface-variant">
           {search
             ? `${total} hakutulosta`
-            : activeIntressiName
-              ? `${total} intressissä «${activeIntressiName}» · ${tasks.length}/${total} ladattu`
+            : intressiSummary
+              ? `${total} intressissä «${intressiSummary}» · ${tasks.length}/${total} ladattu`
               : `${tasks.length}/${total} ladattu`}
         </Text>
+        <Pressable
+          onPress={() => router.push('/tasks/new')}
+          className="mt-2 flex-row items-center gap-1 self-start"
+        >
+          <Text className="text-lg font-semibold leading-none text-primary">+</Text>
+          <Text className="text-sm font-semibold text-primary">Lisää tehtävä</Text>
+        </Pressable>
         <View className="mt-3">
-          <TaskListToolbar
-            search={search}
-            onSearchChange={setSearch}
-            sort={sort}
-            onSortChange={setSort}
+          <TaskSearchBar value={search} onChangeText={setSearch} />
+        </View>
+        <View className="mt-3">
+          <IntressiFilter
+            intressit={intressit}
+            activeIds={activeIntressiIds}
+            onActiveIdsChange={setActiveIntressiIds}
           />
         </View>
-        {intressit.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
-            <Pressable
-              onPress={() => setActiveIntressiId(null)}
-              className={`mr-2 rounded-full px-4 py-1.5 ${activeIntressiId === null ? 'bg-primary' : 'bg-surface-container'}`}
-            >
-              <Text
-                className={`text-sm font-medium ${activeIntressiId === null ? 'text-on-primary' : 'text-on-surface-variant'}`}
-              >
-                Kaikki
-              </Text>
-            </Pressable>
-            {intressit.map((intressi) => (
-              <Pressable
-                key={intressi.id}
-                onPress={() => setActiveIntressiId(intressi.id)}
-                className={`mr-2 rounded-full px-4 py-1.5 ${activeIntressiId === intressi.id ? 'bg-primary' : 'bg-surface-container'}`}
-              >
-                <Text
-                  className={`text-sm font-medium ${activeIntressiId === intressi.id ? 'text-on-primary' : 'text-on-surface-variant'}`}
-                >
-                  {intressi.name}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        )}
+        <View className="mt-3">
+          <TaskListControls
+            sort={sort}
+            onSortChange={setSort}
+            availableSources={availableSources}
+            activeSources={activeSources}
+            onActiveSourcesChange={setActiveSources}
+          />
+        </View>
       </View>
 
       {loading && tasks.length === 0 ? (
@@ -179,13 +212,19 @@ export default function TasksScreen() {
       ) : (
         <ScrollView
           className="flex-1 px-4 py-4"
-          contentContainerStyle={{ paddingBottom: scrollBottomPadding + FAB_SCROLL_EXTRA }}
+          contentContainerStyle={{ paddingBottom: scrollBottomPadding }}
           onScroll={handleScroll}
           scrollEventThrottle={200}
         >
           {tasks.length === 0 ? (
             <Text className="py-12 text-center text-on-surface-variant">
-              {search ? 'Ei hakutuloksia' : activeIntressiId ? 'Ei tehtäviä tässä intressissä' : 'Ei tehtäviä'}
+              {search
+                ? 'Ei hakutuloksia'
+                : intressiFiltered
+                  ? 'Ei tehtäviä valituissa intresseissä'
+                  : sourcesFiltered
+                    ? 'Ei tehtäviä valituista lähteistä'
+                    : 'Ei tehtäviä'}
             </Text>
           ) : (
             tasks.map((task) => {
@@ -285,12 +324,6 @@ export default function TasksScreen() {
         </ScrollView>
       )}
 
-      <Pressable
-        onPress={() => router.push('/tasks/new')}
-        className="absolute bottom-6 right-4 h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg"
-      >
-        <Text className="text-2xl text-on-primary">+</Text>
-      </Pressable>
     </View>
   )
 }

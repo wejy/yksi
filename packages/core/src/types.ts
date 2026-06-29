@@ -58,8 +58,10 @@ export const TASKS_LIST_PAGE_SIZE = 30
 export interface TaskFilters {
   status?: TaskStatus
   source?: TaskSource
+  sources?: TaskSource[]
   priority?: TaskPriority
   yhteispintaId?: string
+  yhteispintaIds?: string[]
   dueBefore?: Date
   dueAfter?: Date
   search?: string

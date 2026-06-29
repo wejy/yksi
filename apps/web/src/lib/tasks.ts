@@ -8,10 +8,11 @@ import {
   sql,
   desc,
   asc,
+  inArray,
 } from 'drizzle-orm'
-import { getDb, tasks, yhteispinnat } from '@yksi/db'
+import { getDb, tasks, yhteispinnat, integrationConnections } from '@yksi/db'
 import type { TaskFilters, TaskContentDocument, TaskSource, TaskSortBy, TaskSortOrder } from '@yksi/core'
-import { normalizeTaskContent, taskContentFromMarkdown, taskContentToPlainText, getLinearTaskSourceDetail } from '@yksi/core'
+import { normalizeTaskContent, taskContentFromMarkdown, taskContentToPlainText, getLinearTaskSourceDetail, getTaskSourceMeta } from '@yksi/core'
 
 function mapTaskRow<T extends {
   task: {
@@ -77,10 +78,17 @@ export async function listTasks(userId: string, filters: TaskFilters = {}) {
   const conditions = [eq(tasks.userId, userId)]
 
   if (filters.status) conditions.push(eq(tasks.status, filters.status))
-  if (filters.source) conditions.push(eq(tasks.source, filters.source))
+  if (filters.sources?.length) {
+    conditions.push(inArray(tasks.source, filters.sources))
+  } else if (filters.source) {
+    conditions.push(eq(tasks.source, filters.source))
+  }
   if (filters.priority) conditions.push(eq(tasks.priority, filters.priority))
-  if (filters.yhteispintaId)
+  if (filters.yhteispintaIds?.length) {
+    conditions.push(inArray(tasks.yhteispintaId, filters.yhteispintaIds))
+  } else if (filters.yhteispintaId) {
     conditions.push(eq(tasks.yhteispintaId, filters.yhteispintaId))
+  }
   if (filters.dueBefore) conditions.push(lte(tasks.dueAt, filters.dueBefore))
   if (filters.dueAfter) conditions.push(gte(tasks.dueAt, filters.dueAfter))
   if (filters.search) {
@@ -119,6 +127,53 @@ export async function listTasks(userId: string, filters: TaskFilters = {}) {
     limit,
     offset,
   }
+}
+
+const FILTERABLE_SOURCES: TaskSource[] = ['native', 'linear', 'notion', 'google_calendar']
+
+export async function getAvailableTaskSources(userId: string) {
+  const db = getDb()
+
+  const [counts, connections] = await Promise.all([
+    db
+      .select({
+        source: tasks.source,
+        taskCount: sql<number>`count(*)::int`,
+      })
+      .from(tasks)
+      .where(eq(tasks.userId, userId))
+      .groupBy(tasks.source),
+    db
+      .select({
+        provider: integrationConnections.provider,
+        status: integrationConnections.status,
+      })
+      .from(integrationConnections)
+      .where(eq(integrationConnections.userId, userId)),
+  ])
+
+  const taskCountBySource = new Map(counts.map((row) => [row.source, row.taskCount]))
+  const activeProviders = new Set(
+    connections.filter((c) => c.status === 'active').map((c) => c.provider),
+  )
+
+  const sources = FILTERABLE_SOURCES.filter((source) => {
+    const taskCount = taskCountBySource.get(source) ?? 0
+    if (source === 'native') return true
+    const connected = activeProviders.has(source)
+    return connected || taskCount > 0
+  }).map((source) => {
+    const meta = getTaskSourceMeta(source)
+    return {
+      source,
+      label: meta.label,
+      icon: meta.icon,
+      taskCount: taskCountBySource.get(source) ?? 0,
+      connected: source === 'native' ? true : activeProviders.has(source),
+    }
+  })
+
+  return { sources }
 }
 
 export async function getTodayTasks(userId: string, timezone = 'Europe/Helsinki') {

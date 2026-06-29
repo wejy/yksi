@@ -8,9 +8,11 @@ const querySchema = z.object({
   source: z.enum(['linear', 'notion', 'google_calendar', 'native']).optional(),
   priority: z.enum(['none', 'low', 'medium', 'high', 'urgent']).optional(),
   yhteispintaId: z.string().uuid().optional(),
+  yhteispintaIds: z.string().optional(),
   dueBefore: z.string().datetime().optional(),
   dueAfter: z.string().datetime().optional(),
   search: z.string().optional(),
+  sources: z.string().optional(),
   sortBy: z.enum(['created_at', 'due_at', 'priority', 'source']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
   limit: z.coerce.number().optional(),
@@ -32,9 +34,23 @@ export async function GET(request: NextRequest) {
     const session = await requireAuth()
     const params = Object.fromEntries(request.nextUrl.searchParams)
     const filters = querySchema.parse(params)
+    const sources = filters.sources
+      ?.split(',')
+      .map((s) => s.trim())
+      .filter((s): s is 'linear' | 'notion' | 'google_calendar' | 'native' =>
+        ['linear', 'notion', 'google_calendar', 'native'].includes(s),
+      )
+    const yhteispintaIds = filters.yhteispintaIds
+      ?.split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
 
     const result = await listTasks(session.user.id, {
       ...filters,
+      sources: sources?.length ? sources : undefined,
+      source: sources?.length ? undefined : filters.source,
+      yhteispintaIds: yhteispintaIds?.length ? yhteispintaIds : undefined,
+      yhteispintaId: yhteispintaIds?.length ? undefined : filters.yhteispintaId,
       dueBefore: filters.dueBefore ? new Date(filters.dueBefore) : undefined,
       dueAfter: filters.dueAfter ? new Date(filters.dueAfter) : undefined,
     })

@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         .innerJoin(tasks, eq(tasks.yhteispintaId, yhteispinnat.id))
         .where(eq(yhteispinnat.userId, session.user.id))
         .groupBy(yhteispinnat.id, yhteispinnat.name, yhteispinnat.color, yhteispinnat.icon)
-        .orderBy(yhteispinnat.name)
+        .orderBy(sql`count(${tasks.id}) desc`, yhteispinnat.name)
 
       return jsonResponse({ intressit: rows })
     }

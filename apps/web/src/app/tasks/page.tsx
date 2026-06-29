@@ -7,9 +7,13 @@ import {
   BottomNav,
   TaskCard,
   SearchBar,
-  CategoryChip,
-  Fab,
+  AddTaskButton,
+  TaskListControls,
+  IntressiFilter,
   bottomNavPaddingClass,
+  type TaskSortState,
+  type TaskSourceFilterOption,
+  type IntressiFilterOption,
 } from '@yksi/ui'
 import {
   TASKS_LIST_PAGE_SIZE,
@@ -20,14 +24,6 @@ import {
   type TaskSortBy,
   type TaskSortOrder,
 } from '@yksi/core'
-import type { TaskSortState } from '@yksi/ui'
-
-interface Intressi {
-  id: string
-  name: string
-  color: string | null
-  taskCount?: number
-}
 
 interface Task {
   id: string
@@ -42,18 +38,28 @@ interface Task {
   yhteispinta: { id: string; name: string; color: string | null } | null
 }
 
+function intressiFilterSummary(intressit: IntressiFilterOption[], activeIds: string[]): string | null {
+  if (activeIds.length === 0) return null
+  if (activeIds.length === 1) {
+    return intressit.find((i) => i.id === activeIds[0])?.name ?? null
+  }
+  return `${activeIds.length} intressiä`
+}
+
 // Based on ui/teht_v_lista/code.html
 export default function TasksPage() {
   const router = useRouter()
   const [tasks, setTasks] = useState<Task[]>([])
-  const [intressit, setIntressit] = useState<Intressi[]>([])
+  const [intressit, setIntressit] = useState<IntressiFilterOption[]>([])
+  const [availableSources, setAvailableSources] = useState<TaskSourceFilterOption[]>([])
   const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<TaskSortState>({
     sortBy: DEFAULT_TASK_SORT_BY,
     sortOrder: DEFAULT_TASK_SORT_ORDER,
   })
-  const [activeIntressiId, setActiveIntressiId] = useState<string | null>(null)
+  const [activeSources, setActiveSources] = useState<TaskSource[]>([])
+  const [activeIntressiIds, setActiveIntressiIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
@@ -62,7 +68,23 @@ export default function TasksPage() {
   useEffect(() => {
     fetch('/api/yhteispinnat?usedInTasks=true')
       .then((r) => r.json())
-      .then((data) => setIntressit(data.intressit ?? []))
+      .then((data) =>
+        setIntressit(
+          (data.intressit ?? []).map(
+            (item: { id: string; name: string; taskCount: number; color: string | null }) => ({
+              id: item.id,
+              name: item.name,
+              taskCount: item.taskCount ?? 0,
+              color: item.color,
+            }),
+          ),
+        ),
+      )
+      .catch(console.error)
+
+    fetch('/api/tasks/sources')
+      .then((r) => r.json())
+      .then((data) => setAvailableSources(data.sources ?? []))
       .catch(console.error)
   }, [])
 
@@ -70,7 +92,8 @@ export default function TasksPage() {
     async (
       offset: number,
       searchQuery: string,
-      intressiId: string | null,
+      intressiIds: string[],
+      sources: TaskSource[],
       sortBy: TaskSortBy,
       sortOrder: TaskSortOrder,
       append: boolean,
@@ -86,7 +109,8 @@ export default function TasksPage() {
         params.set('limit', String(TASKS_LIST_PAGE_SIZE))
         params.set('offset', String(offset))
         if (searchQuery.trim()) params.set('search', searchQuery.trim())
-        if (intressiId) params.set('yhteispintaId', intressiId)
+        if (intressiIds.length > 0) params.set('yhteispintaIds', intressiIds.join(','))
+        if (sources.length > 0) params.set('sources', sources.join(','))
         params.set('sortBy', sortBy)
         params.set('sortOrder', sortOrder)
 
@@ -109,13 +133,32 @@ export default function TasksPage() {
   )
 
   useEffect(() => {
-    fetchPage(0, search, activeIntressiId, sort.sortBy, sort.sortOrder, false)
-  }, [search, activeIntressiId, sort.sortBy, sort.sortOrder, fetchPage])
+    fetchPage(0, search, activeIntressiIds, activeSources, sort.sortBy, sort.sortOrder, false)
+  }, [search, activeIntressiIds, activeSources, sort.sortBy, sort.sortOrder, fetchPage])
 
   const loadMore = useCallback(() => {
     if (loading || loadingMore || !hasMore) return
-    fetchPage(tasks.length, search, activeIntressiId, sort.sortBy, sort.sortOrder, true)
-  }, [loading, loadingMore, hasMore, tasks.length, search, activeIntressiId, sort.sortBy, sort.sortOrder, fetchPage])
+    fetchPage(
+      tasks.length,
+      search,
+      activeIntressiIds,
+      activeSources,
+      sort.sortBy,
+      sort.sortOrder,
+      true,
+    )
+  }, [
+    loading,
+    loadingMore,
+    hasMore,
+    tasks.length,
+    search,
+    activeIntressiIds,
+    activeSources,
+    sort.sortBy,
+    sort.sortOrder,
+    fetchPage,
+  ])
 
   useEffect(() => {
     const sentinel = loadMoreRef.current
@@ -134,50 +177,45 @@ export default function TasksPage() {
 
   const openCount = tasks.filter((t) => t.status !== 'done').length
   const loadedCount = tasks.length
-  const activeIntressiName = intressit.find((i) => i.id === activeIntressiId)?.name
+  const intressiSummary = intressiFilterSummary(intressit, activeIntressiIds)
+  const sourcesFiltered = activeSources.length > 0
+  const intressiFiltered = activeIntressiIds.length > 0
 
   return (
     <div className={`mx-auto min-h-screen max-w-2xl pt-16 ${bottomNavPaddingClass}`}>
       <TopAppBar onNotifications={() => {}} />
 
       <main className="space-y-4 p-4">
-        <div className="flex items-end justify-between gap-3 px-1">
-          <div>
-            <h2 className="text-2xl font-bold text-on-surface">Tehtävät</h2>
-            <p className="text-sm text-on-surface-variant">
-              {search
-                ? `${total} hakutulosta`
-                : activeIntressiName
-                  ? `${total} intressissä «${activeIntressiName}» · ${loadedCount}/${total} ladattu`
-                  : `${openCount} avointa ladatussa · ${loadedCount}/${total} ladattu`}
-            </p>
-          </div>
+        <div className="px-1">
+          <h2 className="text-2xl font-bold text-on-surface">Tehtävät</h2>
+          <p className="text-sm text-on-surface-variant">
+            {search
+              ? `${total} hakutulosta`
+              : intressiSummary
+                ? `${total} intressissä «${intressiSummary}» · ${loadedCount}/${total} ladattu`
+                : `${openCount} avointa ladatussa · ${loadedCount}/${total} ladattu`}
+          </p>
+          <AddTaskButton
+            onClick={() => router.push('/tasks/new')}
+            className="mt-2"
+          />
         </div>
 
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          sort={sort}
-          onSortChange={setSort}
+        <SearchBar value={search} onChange={setSearch} />
+
+        <IntressiFilter
+          intressit={intressit}
+          activeIds={activeIntressiIds}
+          onActiveIdsChange={setActiveIntressiIds}
         />
 
-        {intressit.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            <CategoryChip
-              label="Kaikki intressit"
-              active={activeIntressiId === null}
-              onClick={() => setActiveIntressiId(null)}
-            />
-            {intressit.map((intressi) => (
-              <CategoryChip
-                key={intressi.id}
-                label={intressi.name}
-                active={activeIntressiId === intressi.id}
-                onClick={() => setActiveIntressiId(intressi.id)}
-              />
-            ))}
-          </div>
-        )}
+        <TaskListControls
+          sort={sort}
+          onSortChange={setSort}
+          availableSources={availableSources}
+          activeSources={activeSources}
+          onActiveSourcesChange={setActiveSources}
+        />
 
         <div className="space-y-3">
           {loading && tasks.length === 0 ? (
@@ -188,7 +226,13 @@ export default function TasksPage() {
             <div className="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-6 py-12 text-center">
               <span className="material-symbols-outlined mb-2 text-4xl text-outline">inbox</span>
               <p className="font-medium text-on-surface">
-                {search ? 'Ei hakutuloksia' : activeIntressiId ? 'Ei tehtäviä tässä intressissä' : 'Ei tehtäviä'}
+                {search
+                  ? 'Ei hakutuloksia'
+                  : intressiFiltered
+                    ? 'Ei tehtäviä valituissa intresseissä'
+                    : sourcesFiltered
+                      ? 'Ei tehtäviä valituista lähteistä'
+                      : 'Ei tehtäviä'}
               </p>
               <p className="mt-1 text-sm text-on-surface-variant">
                 {search
@@ -241,8 +285,6 @@ export default function TasksPage() {
           )}
         </div>
       </main>
-
-      <Fab onClick={() => router.push('/tasks/new')} />
 
       <BottomNav
         activeTab="tasks"
