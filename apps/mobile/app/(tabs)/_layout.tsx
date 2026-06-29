@@ -1,7 +1,12 @@
 import { Tabs } from 'expo-router'
 import { Text, type ColorValue } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { TAB_BAR_HEIGHT } from '@/lib/layout'
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets()
+  const tabBarPaddingBottom = Math.max(insets.bottom, 8)
+
   return (
     <Tabs
       screenOptions={{
@@ -11,7 +16,9 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: '#ffffff',
           borderTopColor: '#c7c4d8',
-          height: 64,
+          height: TAB_BAR_HEIGHT + tabBarPaddingBottom,
+          paddingBottom: tabBarPaddingBottom,
+          paddingTop: 6,
         },
       }}
     >

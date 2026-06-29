@@ -20,3 +20,7 @@ export function formatSyncResult(provider: string, result: SyncResult): string {
   }
   return `${name}: ${result.created} uutta, ${result.updated} päivitettyä tehtävää.`
 }
+
+export function formatSyncError(provider: string, message: string): string {
+  return `${getProviderLabel(provider)}: ${message}`
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
 import { apiFetch } from '@/lib/api'
+import { useTabScrollBottomPadding } from '@/lib/layout'
 
 interface TodayTask {
   id: string
@@ -14,6 +15,7 @@ interface TodayTask {
 // Based on ui/dashboard_korjattu/code.html
 export default function DashboardScreen() {
   const router = useRouter()
+  const scrollBottomPadding = useTabScrollBottomPadding()
   const [tasks, setTasks] = useState<TodayTask[]>([])
   const [summary, setSummary] = useState({ total: 0, completed: 0, remaining: 0 })
   const [pendingCount, setPendingCount] = useState(0)
@@ -61,7 +63,10 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 py-4" contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView
+        className="flex-1 px-4 py-4"
+        contentContainerStyle={{ paddingBottom: scrollBottomPadding }}
+      >
         <View className="mb-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
           <View className="mb-4 flex-row items-center justify-between">
             <View>

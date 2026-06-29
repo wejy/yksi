@@ -18,6 +18,7 @@ const querySchema = z.object({
 const bodySchema = z.object({
   title: z.string().min(1),
   description: z.string().nullable().optional(),
+  contentDocument: z.array(z.record(z.string(), z.unknown())).nullable().optional(),
   priority: z.enum(['none', 'low', 'medium', 'high', 'urgent']).optional(),
   dueAt: z.string().datetime().nullable().optional(),
   reminderAt: z.string().datetime().nullable().optional(),
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
     const task = await createTask(session.user.id, {
       title: body.title,
       description: body.description,
+      contentDocument: (body.contentDocument ?? null) as import('@yksi/core').TaskContentDocument | null,
       priority: body.priority,
       dueAt: body.dueAt ? new Date(body.dueAt) : null,
       reminderAt: body.reminderAt ? new Date(body.reminderAt) : null,

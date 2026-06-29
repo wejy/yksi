@@ -82,3 +82,21 @@ export const navItems = [
   { id: 'calendar', icon: 'calendar_month', label: 'Kalenteri' },
   { id: 'profile', icon: 'person', label: 'Profiili' },
 ] as const
+
+/** Fixed BottomNav bar height (excludes safe-area inset). */
+export const BOTTOM_NAV_HEIGHT_PX = 64
+
+/** Extra scroll padding below main content so it clears the fixed nav. */
+export const BOTTOM_NAV_CONTENT_GAP_PX = 24
+
+/** Page/container padding below scrollable content (web). */
+export const bottomNavPaddingClass =
+  'pb-[calc(4rem+1.5rem+env(safe-area-inset-bottom,0px))]'
+
+/** FAB offset above the fixed BottomNav (web). */
+export const fabOffsetClass =
+  'bottom-[calc(4rem+1rem+env(safe-area-inset-bottom,0px))]'
+
+/** Bottom padding for detail screens without BottomNav. */
+export const screenBottomPaddingClass =
+  'pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]'

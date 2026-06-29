@@ -15,7 +15,7 @@ Tämä tiedosto on Cursor-agentin ensisijainen ohje Yksi-projektin toteutukseen.
 - **Yksi lähde totuudelle** — domain-mallit `packages/core`, skeema `packages/db`
 - **Älä muuta `ui/`-mockupeja** — ne ovat referenssiä, toteutus menee `apps/` ja `packages/ui`
 - **Brändi on Yksi** — mockupeissa lukee "Unified", käytä koodissa ja UI:ssa "Yksi"
-- **Yhteispinta** — Common Ground -konsepti suomeksi; koodissa `yhteispinta` / `commonGrounds`
+- **Intressi** — Common Ground -konsepti suomeksi (UI); koodissa ja tietokannassa `yhteispinta` / `yhteispinnat`
 
 ## Monorepo-konventiot
 

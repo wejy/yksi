@@ -14,6 +14,7 @@ export interface UnifiedTask {
   externalUrl: string | null
   title: string
   description: string | null
+  contentDocument: import('./task-content').TaskContentDocument | null
   status: TaskStatus
   priority: TaskPriority
   dueAt: Date | null
@@ -51,6 +52,8 @@ export interface IntegrationConnection {
   createdAt: Date
   updatedAt: Date
 }
+
+export const TASKS_LIST_PAGE_SIZE = 30
 
 export interface TaskFilters {
   status?: TaskStatus

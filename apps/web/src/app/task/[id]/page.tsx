@@ -1,24 +1,28 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import {
-  TopAppBar,
-  BentoSettingCard,
-  Button,
-  Input,
-} from '@yksi/ui'
+import { TopAppBar, BentoSettingCard, Button, screenBottomPaddingClass } from '@yksi/ui'
+import type { TaskContentDocument, LinearTaskSourceDetail, TaskSource } from '@yksi/core'
+import { INTRESSI_LABEL, getTaskSourceMeta, fromDatetimeLocalValue, toDatetimeLocalValue } from '@yksi/core'
+import { TaskContentEditor, TaskContentViewer } from '@/components/task-content-editor'
+import { DeadlineReminderFields } from '@/components/deadline-reminder-fields'
+import { IntressiField, type IntressiOption } from '@/components/intressi-field'
 
 interface TaskDetail {
   id: string
   title: string
   description: string | null
+  contentDocument: TaskContentDocument | null
   status: string
   priority: string
   dueAt: string | null
   reminderAt: string | null
-  source: string
-  yhteispinta: { name: string } | null
+  source: TaskSource
+  externalUrl: string | null
+  labels: string[]
+  sourceDetail: LinearTaskSourceDetail | null
+  yhteispinta: { id: string; name: string } | null
 }
 
 // Based on ui/teht_v_n_tiedot/code.html
@@ -29,26 +33,50 @@ export default function TaskDetailPage() {
 
   const [task, setTask] = useState<TaskDetail | null>(null)
   const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
+  const [contentDocument, setContentDocument] = useState<TaskContentDocument | null>(null)
+  const [intressit, setIntressit] = useState<IntressiOption[]>([])
+  const [intressiId, setIntressiId] = useState<string>('')
+  const [deadline, setDeadline] = useState('')
+  const [reminder, setReminder] = useState('')
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/yhteispinnat')
+      .then((r) => r.json())
+      .then((data) => setIntressit(data.intressit ?? []))
+      .catch(console.error)
+  }, [])
 
   useEffect(() => {
     fetch(`/api/tasks/${id}`)
       .then((r) => r.json())
-      .then((data) => {
+      .then((data: TaskDetail) => {
         setTask(data)
         setTitle(data.title)
-        setDescription(data.description ?? '')
+        setContentDocument(data.contentDocument)
+        setIntressiId(data.yhteispinta?.id ?? '')
+        setDeadline(toDatetimeLocalValue(data.dueAt))
+        setReminder(toDatetimeLocalValue(data.reminderAt))
       })
       .catch(console.error)
   }, [id])
+
+  const handleContentChange = useCallback((doc: TaskContentDocument) => {
+    setContentDocument(doc)
+  }, [])
 
   async function handleSave() {
     setSaving(true)
     await fetch(`/api/tasks/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description }),
+      body: JSON.stringify({
+        title,
+        contentDocument,
+        yhteispintaId: intressiId || null,
+        dueAt: fromDatetimeLocalValue(deadline),
+        reminderAt: fromDatetimeLocalValue(reminder),
+      }),
     })
     setSaving(false)
     router.back()
@@ -73,8 +101,11 @@ export default function TaskDetailPage() {
     )
   }
 
+  const isNative = task.source === 'native'
+  const sourceMeta = getTaskSourceMeta(task.source)
+
   return (
-    <div className="mx-auto min-h-screen max-w-2xl pb-24 pt-16">
+    <div className={`mx-auto min-h-screen max-w-2xl pt-16 ${screenBottomPaddingClass}`}>
       <TopAppBar
         title="Tehtävän tiedot"
         showBack
@@ -82,59 +113,139 @@ export default function TaskDetailPage() {
       />
 
       <main className="space-y-6 p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${sourceMeta.colorClass}`}
+          >
+            <span className="material-symbols-outlined text-sm">{sourceMeta.icon}</span>
+            {sourceMeta.label}
+          </span>
+          {task.sourceDetail?.stateName && (
+            <span className="rounded-full bg-surface-container px-2.5 py-1 text-xs text-on-surface-variant">
+              {task.sourceDetail.stateName}
+            </span>
+          )}
+          {task.externalUrl ? (
+            <a
+              href={task.externalUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-medium text-primary underline"
+            >
+              Avaa lähteessä
+            </a>
+          ) : null}
+        </div>
+
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full border-none bg-transparent text-2xl font-bold text-on-surface focus:outline-none"
+          readOnly={!isNative}
+          className="w-full border-none bg-transparent text-2xl font-bold text-on-surface focus:outline-none read-only:opacity-90"
         />
 
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Kuvaus..."
-          rows={4}
-          className="w-full resize-none rounded-lg border border-outline-variant bg-transparent p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+        <section>
+          <h3 className="mb-2 text-sm font-medium uppercase tracking-wide text-on-surface-variant">
+            Sisältö
+          </h3>
+          {isNative ? (
+            <TaskContentEditor
+              key={task.id}
+              value={contentDocument}
+              onChange={handleContentChange}
+              editable
+              className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
+            />
+          ) : (
+            <TaskContentViewer value={contentDocument} />
+          )}
+          {!isNative ? (
+            <p className="mt-2 text-xs text-on-surface-variant">
+              Linear- ja Notion-tehtävien sisältö synkataan lähteestä. Muokkaa sisältöä siellä.
+            </p>
+          ) : null}
+        </section>
 
-        <div className="grid grid-cols-3 gap-3">
-          <BentoSettingCard
-            icon="notifications"
-            label="Muistutus"
-            value={
-              task.reminderAt
-                ? new Date(task.reminderAt).toLocaleString('fi-FI', {
-                    day: 'numeric',
-                    month: 'long',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })
-                : 'Ei asetettu'
-            }
-          />
-          <BentoSettingCard
-            icon="event"
-            label="Määräpäivä"
-            value={
-              task.dueAt
-                ? new Date(task.dueAt).toLocaleDateString('fi-FI', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })
-                : 'Ei asetettu'
-            }
-          />
-          <BentoSettingCard
-            icon="folder"
-            label="Yhteispinta"
-            value={task.yhteispinta?.name ?? 'Ei valittu'}
-          />
-        </div>
+        {task.labels.length > 0 && (
+          <section>
+            <h3 className="mb-2 text-sm font-medium uppercase tracking-wide text-on-surface-variant">
+              Labelit
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {task.labels.map((label) => (
+                <span
+                  key={label}
+                  className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
 
-        <p className="text-xs text-on-surface-variant">
-          Lähde: {task.source}
-        </p>
+        {isNative ? (
+          <IntressiField
+            intressit={intressit}
+            value={intressiId}
+            onChange={setIntressiId}
+            onCreated={(intressi) => setIntressit((prev) => [...prev, intressi])}
+          />
+        ) : (
+          <BentoSettingCard
+            icon="target"
+            label={INTRESSI_LABEL}
+            value={task.yhteispinta?.name ?? task.sourceDetail?.projectName ?? 'Ei valittu'}
+          />
+        )}
+
+        {isNative ? (
+          <DeadlineReminderFields
+            deadline={deadline}
+            reminder={reminder}
+            onDeadlineChange={setDeadline}
+            onReminderChange={setReminder}
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <BentoSettingCard
+              icon="notifications"
+              label="Hälytysaika"
+              value={
+                task.reminderAt
+                  ? new Date(task.reminderAt).toLocaleString('fi-FI', {
+                      day: 'numeric',
+                      month: 'long',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : 'Ei asetettu'
+              }
+            />
+            <BentoSettingCard
+              icon="event"
+              label="Deadline"
+              value={
+                task.dueAt
+                  ? new Date(task.dueAt).toLocaleString('fi-FI', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : 'Ei asetettu'
+              }
+            />
+          </div>
+        )}
+
+        {task.sourceDetail?.teamName && (
+          <p className="text-sm text-on-surface-variant">
+            Linear-tiimi: {task.sourceDetail.teamName}
+          </p>
+        )}
 
         <Button
           variant={task.status === 'done' ? 'outline' : 'default'}
@@ -145,13 +256,15 @@ export default function TaskDetailPage() {
         </Button>
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 border-t border-outline-variant bg-surface-container-lowest p-4">
-        <div className="mx-auto max-w-2xl">
-          <Button className="w-full" onClick={handleSave} disabled={saving}>
-            {saving ? 'Tallennetaan...' : 'Tallenna muutokset'}
-          </Button>
+      {isNative ? (
+        <div className="fixed bottom-0 left-0 right-0 border-t border-outline-variant bg-surface-container-lowest p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
+          <div className="mx-auto max-w-2xl">
+            <Button className="w-full" onClick={handleSave} disabled={saving}>
+              {saving ? 'Tallennetaan...' : 'Tallenna muutokset'}
+            </Button>
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   )
 }

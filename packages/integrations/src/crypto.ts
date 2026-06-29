@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'node:crypto'
+import { IntegrationError } from './errors'
 
 const ALGORITHM = 'aes-256-gcm'
 const IV_LENGTH = 16
@@ -24,7 +25,11 @@ function resolveEncryptionKey(secret: string): Buffer {
 function getEncryptionSecret(): string {
   const secret = process.env.INTEGRATION_TOKEN_ENCRYPTION_KEY?.trim()
   if (!secret) {
-    throw new Error('INTEGRATION_TOKEN_ENCRYPTION_KEY is not set')
+    throw new IntegrationError(
+      'ENCRYPTION_KEY_MISSING',
+      'Palvelimen integraatioasetukset puuttuvat (INTEGRATION_TOKEN_ENCRYPTION_KEY).',
+      500,
+    )
   }
   return secret
 }
@@ -62,5 +67,9 @@ export function decryptToken(ciphertext: string): string {
     }
   }
 
-  throw lastError instanceof Error ? lastError : new Error('Failed to decrypt token')
+  throw new IntegrationError(
+    'TOKEN_DECRYPT_FAILED',
+    'Integraation tunnusta ei voitu purkaa. Yhdistä integraatio uudelleen profiilissa.',
+    500,
+  )
 }

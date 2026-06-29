@@ -1,8 +1,8 @@
 # Tietomalli
 
-## Yhteispinta (Common Ground)
+## Intressi (`yhteispinnat`)
 
-Yhteispinta korvaa perinteisen "projektin" käsitteen. Se on jaettu konteksti johon tehtävät eri lähteistä ryhmittyvät.
+Intressi korvaa perinteisen "projektin" käsitteen. Se on jaettu konteksti johon tehtävät eri lähteistä ryhmittyvät. UI:ssa termi on **Intressi**; tietokannassa taulu `yhteispinnat`.
 
 ```typescript
 interface Yhteispinta {
@@ -18,8 +18,8 @@ interface Yhteispinta {
 ```
 
 **Automaattinen vs manuaalinen:**
-- Linear Project/Team → automaattinen yhteispinta synkan yhteydessä
-- Käyttäjä voi luoda yhteispintoja manuaalisesti ja liittää tehtäviä
+- Linear Project/Team → automaattinen intressi synkan yhteydessä
+- Käyttäjä voi luoda intressejä manuaalisesti ja liittää tehtäviä
 
 ## UnifiedTask
 

@@ -1,6 +1,7 @@
 import {
   parseGoogleDate,
   computeReminderAt,
+  normalizeTaskContent,
   type GoogleCalendarEvent,
 } from '@yksi/core'
 
@@ -106,6 +107,9 @@ export function normalizeGoogleEvent(
   const startAt = parseGoogleDate(event.start)
   const endAt = parseGoogleDate(event.end)
   const now = new Date()
+  const { contentDocument, description } = normalizeTaskContent({
+    plainText: event.description,
+  })
 
   return {
     userId,
@@ -113,7 +117,8 @@ export function normalizeGoogleEvent(
     externalId: event.id,
     externalUrl: event.htmlLink ?? null,
     title: event.summary ?? 'Ei otsikkoa',
-    description: event.description ?? null,
+    description,
+    contentDocument,
     status: endAt && endAt < now ? ('done' as const) : ('open' as const),
     priority: 'none' as const,
     dueAt: null,

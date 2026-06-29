@@ -10,7 +10,44 @@ import {
   asc,
 } from 'drizzle-orm'
 import { getDb, tasks, yhteispinnat } from '@yksi/db'
-import type { TaskFilters } from '@yksi/core'
+import type { TaskFilters, TaskContentDocument, TaskSource } from '@yksi/core'
+import { normalizeTaskContent, taskContentFromMarkdown, taskContentToPlainText, getLinearTaskSourceDetail } from '@yksi/core'
+
+function mapTaskRow<T extends {
+  task: {
+    source: TaskSource
+    externalId: string | null
+    rawPayload: unknown
+    labels: string[]
+    description: string | null
+    contentDocument: unknown
+  }
+  yhteispinta: { id: string; name: string; color: string | null } | null
+}>(row: T) {
+  return hydrateTaskContent({
+    ...row.task,
+    yhteispinta: row.yhteispinta
+      ? { id: row.yhteispinta.id, name: row.yhteispinta.name, color: row.yhteispinta.color }
+      : null,
+    labels: row.task.labels ?? [],
+    sourceDetail:
+      row.task.source === 'linear'
+        ? getLinearTaskSourceDetail(row.task.rawPayload as Record<string, unknown>)
+        : null,
+  })
+}
+
+function hydrateTaskContent<T extends { description: string | null; contentDocument: unknown }>(
+  task: T,
+): T & { contentDocument: TaskContentDocument | null } {
+  if (Array.isArray(task.contentDocument) && task.contentDocument.length > 0) {
+    return { ...task, contentDocument: task.contentDocument as TaskContentDocument }
+  }
+  if (task.description?.trim()) {
+    return { ...task, contentDocument: taskContentFromMarkdown(task.description) }
+  }
+  return { ...task, contentDocument: null }
+}
 
 export async function listTasks(userId: string, filters: TaskFilters = {}) {
   const db = getDb()
@@ -44,7 +81,7 @@ export async function listTasks(userId: string, filters: TaskFilters = {}) {
       .from(tasks)
       .leftJoin(yhteispinnat, eq(tasks.yhteispintaId, yhteispinnat.id))
       .where(and(...conditions))
-      .orderBy(desc(tasks.priority), asc(tasks.dueAt))
+      .orderBy(desc(tasks.priority), asc(tasks.dueAt), asc(tasks.id))
       .limit(limit)
       .offset(offset),
     db
@@ -54,12 +91,7 @@ export async function listTasks(userId: string, filters: TaskFilters = {}) {
   ])
 
   return {
-    tasks: taskRows.map(({ task, yhteispinta }) => ({
-      ...task,
-      yhteispinta: yhteispinta
-        ? { id: yhteispinta.id, name: yhteispinta.name, color: yhteispinta.color }
-        : null,
-    })),
+    tasks: taskRows.map((row) => mapTaskRow(row)),
     total: countResult[0]?.count ?? 0,
     limit,
     offset,
@@ -127,12 +159,7 @@ export async function getTaskById(userId: string, taskId: string) {
 
   if (!row) return null
 
-  return {
-    ...row.task,
-    yhteispinta: row.yhteispinta
-      ? { id: row.yhteispinta.id, name: row.yhteispinta.name, color: row.yhteispinta.color }
-      : null,
-  }
+  return mapTaskRow(row)
 }
 
 export async function createTask(
@@ -140,6 +167,7 @@ export async function createTask(
   data: {
     title: string
     description?: string | null
+    contentDocument?: TaskContentDocument | null
     priority?: 'none' | 'low' | 'medium' | 'high' | 'urgent'
     dueAt?: Date | null
     reminderAt?: Date | null
@@ -147,13 +175,18 @@ export async function createTask(
   },
 ) {
   const db = getDb()
+  const normalized = data.contentDocument
+    ? normalizeTaskContent({ blocks: data.contentDocument, plainText: data.description })
+    : normalizeTaskContent({ plainText: data.description })
+
   const [task] = await db
     .insert(tasks)
     .values({
       userId,
       source: 'native',
       title: data.title,
-      description: data.description ?? null,
+      description: normalized.description,
+      contentDocument: normalized.contentDocument,
       priority: data.priority ?? 'none',
       dueAt: data.dueAt ?? null,
       reminderAt: data.reminderAt ?? null,
@@ -169,6 +202,7 @@ export async function updateTask(
   data: Partial<{
     title: string
     description: string | null
+    contentDocument: TaskContentDocument | null
     status: 'open' | 'in_progress' | 'done' | 'cancelled'
     priority: 'none' | 'low' | 'medium' | 'high' | 'urgent'
     dueAt: Date | null
@@ -178,6 +212,20 @@ export async function updateTask(
 ) {
   const db = getDb()
   const updateData: Record<string, unknown> = { ...data, updatedAt: new Date() }
+
+  if (data.contentDocument !== undefined) {
+    const normalized = normalizeTaskContent({
+      blocks: data.contentDocument,
+      plainText: data.description ?? undefined,
+    })
+    updateData.contentDocument = normalized.contentDocument
+    updateData.description = normalized.description
+  } else if (data.description !== undefined) {
+    updateData.description = taskContentToPlainText(
+      normalizeTaskContent({ plainText: data.description }).contentDocument,
+      500,
+    ) || null
+  }
 
   if (data.status === 'done') {
     updateData.completedAt = new Date()

@@ -79,7 +79,7 @@ pnpm db:studio      # Drizzle Studio
 | [docs/UI-IMPLEMENTATION.md](docs/UI-IMPLEMENTATION.md) | Mockup → komponentti -mapping |
 | [docs/MVP-ROADMAP.md](docs/MVP-ROADMAP.md) | Vaiheittainen toteutuschecklist |
 | [docs/TECH-STACK.md](docs/TECH-STACK.md) | Versiot, env-muuttujat |
-| [docs/GLOSSARY.md](docs/GLOSSARY.md) | Domain-termit (Yhteispinta jne.) |
+| [docs/GLOSSARY.md](docs/GLOSSARY.md) | Domain-termit (Intressi jne.) |
 | [docs/FREEMIUM.md](docs/FREEMIUM.md) | Ilmainen vs premium |
 | [AGENTS.md](AGENTS.md) | Cursor-agentin ohjeet |
 

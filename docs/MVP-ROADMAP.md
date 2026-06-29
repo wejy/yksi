@@ -81,7 +81,7 @@ Käytä tätä Cursor-agentin vaiheittaisena checklistinä. Merkitse valmiiksi k
 - [ ] `POST /api/integrations/:provider/sync` — manuaalinen synkka
 - [ ] sync_logs kirjaus
 - [ ] Expo push-notifikaatiot (`reminderAt`)
-- [ ] Perusfiltterit UI:ssa (lähde, prioriteetti, yhteispinta)
+- [ ] Perusfiltterit UI:ssa (lähde, prioriteetti, intressi)
 
 ## Vaihe 8 — Freemium + deploy
 

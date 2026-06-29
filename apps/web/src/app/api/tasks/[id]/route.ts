@@ -14,6 +14,7 @@ import { z } from 'zod'
 const patchSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().nullable().optional(),
+  contentDocument: z.array(z.record(z.string(), z.unknown())).nullable().optional(),
   status: z.enum(['open', 'in_progress', 'done', 'cancelled']).optional(),
   priority: z.enum(['none', 'low', 'medium', 'high', 'urgent']).optional(),
   dueAt: z.string().datetime().nullable().optional(),
@@ -50,6 +51,7 @@ export async function PATCH(
 
     const task = await updateTask(session.user.id, id, {
       ...body,
+      contentDocument: body.contentDocument as import('@yksi/core').TaskContentDocument | null | undefined,
       dueAt: body.dueAt !== undefined ? (body.dueAt ? new Date(body.dueAt) : null) : undefined,
       reminderAt:
         body.reminderAt !== undefined

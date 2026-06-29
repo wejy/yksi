@@ -12,7 +12,7 @@
 - Today-näkymä
 - Kalenterinäkymä
 - Tehtävän tiedot
-- Perusfiltterit (lähde, prioriteetti, yhteispinta)
+- Perusfiltterit (lähde, prioriteetti, intressi)
 - Push-muistutukset
 - Natiivitehtävien luonti
 

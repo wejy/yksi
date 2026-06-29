@@ -11,6 +11,9 @@
     "db:seed": "tsx scripts/seed-demo-user.ts"
   },
   "dependencies": {
+    "@blocknote/core": "^0.51.4",
+    "@blocknote/react": "^0.51.4",
+    "@blocknote/shadcn": "^0.51.4",
     "@neondatabase/serverless": "^1.1.0",
     "@yksi/core": "workspace:*",
     "@yksi/db": "workspace:*",

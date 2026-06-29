@@ -9,7 +9,8 @@ import {
   Modal,
 } from 'react-native'
 import { apiFetch } from '@/lib/api'
-import { INTEGRATION_CATALOG, YKSI_DEV_URL, formatSyncResult, getProviderLabel } from '@yksi/core'
+import { INTEGRATION_CATALOG, YKSI_DEV_URL, formatSyncResult, formatSyncError, getProviderLabel } from '@yksi/core'
+import { useTabScrollBottomPadding } from '@/lib/layout'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? YKSI_DEV_URL
 
@@ -35,6 +36,7 @@ interface User {
 
 // Based on ui/profiili_ja_integraatiot/code.html
 export default function ProfileScreen() {
+  const scrollBottomPadding = useTabScrollBottomPadding()
   const [user, setUser] = useState<User | null>(null)
   const [connections, setConnections] = useState<Connection[]>([])
   const [banner, setBanner] = useState<string | null>(null)
@@ -64,8 +66,9 @@ export default function ProfileScreen() {
       )
       setBanner(formatSyncResult(providerId, data))
       await refreshConnections()
-    } catch {
-      setBanner('Synkka epäonnistui.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Synkka epäonnistui.'
+      setBanner(formatSyncError(providerId, message))
     } finally {
       setSyncingProvider(null)
     }
@@ -77,7 +80,10 @@ export default function ProfileScreen() {
         <Text className="text-xl font-bold text-primary">Profiili</Text>
       </View>
 
-      <ScrollView className="flex-1 px-4 py-4" contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView
+        className="flex-1 px-4 py-4"
+        contentContainerStyle={{ paddingBottom: scrollBottomPadding }}
+      >
         {banner ? (
           <View className="mb-4 rounded-xl border border-outline-variant bg-surface-container-low px-4 py-3">
             <Text className="text-sm text-on-surface">{banner}</Text>

@@ -1,9 +1,11 @@
 import type { IntegrationProvider } from '@yksi/core'
-import { eq } from 'drizzle-orm'
+import { normalizeTaskContent, type TaskContentDocument } from '@yksi/core'
+import { and, eq } from 'drizzle-orm'
 import { getDb, integrationConnections } from '@yksi/db'
 import { decryptToken, encryptToken } from './crypto'
+import { IntegrationError } from './errors'
 import { fetchLinearIssues, normalizeLinearIssue } from './linear'
-import { queryNotionDatabase, normalizeNotionPage, defaultNotionMapping } from './notion'
+import { queryNotionDatabase, normalizeNotionPage, defaultNotionMapping, fetchNotionPageBlocks } from './notion'
 import {
   fetchGoogleCalendarEvents,
   normalizeGoogleEvent,
@@ -11,6 +13,7 @@ import {
 } from './google-calendar'
 
 export * from './crypto'
+export * from './errors'
 export * from './linear'
 export * from './notion'
 export * from './google-calendar'
@@ -22,6 +25,7 @@ interface NormalizedTaskInput {
   externalUrl: string | null
   title: string
   description: string | null
+  contentDocument: TaskContentDocument | null
   status: 'open' | 'in_progress' | 'done' | 'cancelled'
   priority: 'none' | 'low' | 'medium' | 'high' | 'urgent'
   dueAt: Date | null
@@ -30,8 +34,85 @@ interface NormalizedTaskInput {
   reminderAt: Date | null
   labels: string[]
   rawPayload: Record<string, unknown>
+  yhteispintaId?: string | null
   yhteispintaName?: string
   yhteispintaMapping?: Record<string, unknown> | null
+}
+
+async function resolveYhteispintaId(
+  userId: string,
+  input: Pick<
+    NormalizedTaskInput,
+    'yhteispintaId' | 'yhteispintaName' | 'yhteispintaMapping'
+  >,
+): Promise<string | null> {
+  if (input.yhteispintaId) return input.yhteispintaId
+  if (!input.yhteispintaName?.trim()) return null
+
+  const db = getDb()
+  const { yhteispinnat } = await import('@yksi/db')
+  const name = input.yhteispintaName.trim()
+  const mapping = input.yhteispintaMapping
+
+  if (mapping) {
+    const rows = await db
+      .select()
+      .from(yhteispinnat)
+      .where(eq(yhteispinnat.userId, userId))
+
+    for (const row of rows) {
+      const existing = row.sourceMapping as Record<string, unknown> | null
+      if (!existing) continue
+      if (
+        mapping.linearProjectId &&
+        existing.linearProjectId === mapping.linearProjectId
+      ) {
+        return row.id
+      }
+      if (mapping.linearTeamId && existing.linearTeamId === mapping.linearTeamId) {
+        return row.id
+      }
+      if (
+        mapping.notionDatabaseId &&
+        existing.notionDatabaseId === mapping.notionDatabaseId
+      ) {
+        return row.id
+      }
+      if (
+        mapping.googleCalendarId &&
+        existing.googleCalendarId === mapping.googleCalendarId
+      ) {
+        return row.id
+      }
+    }
+  }
+
+  const [byName] = await db
+    .select()
+    .from(yhteispinnat)
+    .where(and(eq(yhteispinnat.userId, userId), eq(yhteispinnat.name, name)))
+    .limit(1)
+
+  if (byName) {
+    if (mapping && !byName.sourceMapping) {
+      await db
+        .update(yhteispinnat)
+        .set({ sourceMapping: mapping, updatedAt: new Date() })
+        .where(eq(yhteispinnat.id, byName.id))
+    }
+    return byName.id
+  }
+
+  const [created] = await db
+    .insert(yhteispinnat)
+    .values({
+      userId,
+      name,
+      sourceMapping: mapping ?? null,
+    })
+    .returning()
+
+  return created?.id ?? null
 }
 
 export async function getDecryptedToken(connectionId: string): Promise<string> {
@@ -42,8 +123,21 @@ export async function getDecryptedToken(connectionId: string): Promise<string> {
     .where(eq(integrationConnections.id, connectionId))
     .limit(1)
 
-  if (!conn) throw new Error('Connection not found')
-  return decryptToken(conn.accessTokenEncrypted)
+  if (!conn) {
+    throw new IntegrationError('CONNECTION_NOT_FOUND', 'Integraatiota ei löydy.', 404)
+  }
+
+  let token: string
+  try {
+    token = decryptToken(conn.accessTokenEncrypted)
+  } catch {
+    throw new IntegrationError(
+      'TOKEN_DECRYPT_FAILED',
+      'Integraation salausavain on virheellinen tai muuttunut. Yhdistä integraatio uudelleen profiilissa.',
+      500,
+    )
+  }
+  return token
 }
 
 export async function syncLinearConnection(
@@ -103,7 +197,20 @@ export async function syncNotionConnection(
       : defaultNotionMapping({})
 
     for (const page of pages) {
-      const normalized = normalizeNotionPage(page, userId, dbConfig.name, mapping)
+      let notionBlocks = null
+      try {
+        notionBlocks = await fetchNotionPageBlocks(token, page.id)
+      } catch {
+        notionBlocks = null
+      }
+      const normalized = normalizeNotionPage(
+        page,
+        userId,
+        dbConfig.name,
+        mapping,
+        notionBlocks ?? undefined,
+        dbConfig.id,
+      )
       const result = await upsertTask(normalized)
       if (result === 'created') created++
       else updated++
@@ -195,32 +302,43 @@ export async function syncConnection(
 async function upsertTask(input: NormalizedTaskInput): Promise<'created' | 'updated'> {
   const db = getDb()
   const { tasks } = await import('@yksi/db')
+  const yhteispintaId = await resolveYhteispintaId(input.userId, input)
+
+  const taskValues = {
+    title: input.title,
+    description: input.description,
+    contentDocument: input.contentDocument,
+    status: input.status,
+    priority: input.priority,
+    dueAt: input.dueAt,
+    startAt: input.startAt,
+    endAt: input.endAt,
+    reminderAt: input.reminderAt,
+    labels: input.labels,
+    rawPayload: input.rawPayload,
+    yhteispintaId,
+    syncedAt: new Date(),
+    updatedAt: new Date(),
+    completedAt: input.status === 'done' ? new Date() : null,
+  }
 
   if (input.externalId) {
     const existing = await db
       .select()
       .from(tasks)
-      .where(eq(tasks.externalId, input.externalId))
+      .where(
+        and(
+          eq(tasks.userId, input.userId),
+          eq(tasks.source, input.source),
+          eq(tasks.externalId, input.externalId),
+        ),
+      )
       .limit(1)
 
     if (existing.length > 0) {
       await db
         .update(tasks)
-        .set({
-          title: input.title,
-          description: input.description,
-          status: input.status,
-          priority: input.priority,
-          dueAt: input.dueAt,
-          startAt: input.startAt,
-          endAt: input.endAt,
-          reminderAt: input.reminderAt,
-          labels: input.labels,
-          rawPayload: input.rawPayload,
-          syncedAt: new Date(),
-          updatedAt: new Date(),
-          completedAt: input.status === 'done' ? new Date() : null,
-        })
+        .set(taskValues)
         .where(eq(tasks.id, existing[0]!.id))
       return 'updated'
     }
@@ -231,18 +349,7 @@ async function upsertTask(input: NormalizedTaskInput): Promise<'created' | 'upda
     source: input.source,
     externalId: input.externalId,
     externalUrl: input.externalUrl,
-    title: input.title,
-    description: input.description,
-    status: input.status,
-    priority: input.priority,
-    dueAt: input.dueAt,
-    startAt: input.startAt,
-    endAt: input.endAt,
-    reminderAt: input.reminderAt,
-    labels: input.labels,
-    rawPayload: input.rawPayload,
-    syncedAt: new Date(),
-    completedAt: input.status === 'done' ? new Date() : null,
+    ...taskValues,
   })
 
   return 'created'

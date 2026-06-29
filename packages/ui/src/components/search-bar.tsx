@@ -1,6 +1,6 @@
-// Based on ui/teht_v_lista/code.html
 import * as React from 'react'
 import { cn } from '../lib/utils'
+import { fabOffsetClass } from '../tokens'
 
 export function SearchBar({
   value,
@@ -74,7 +74,8 @@ export function Fab({ onClick, className }: { onClick?: () => void; className?: 
       type="button"
       onClick={onClick}
       className={cn(
-        'fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-on-primary shadow-lg transition-transform active:scale-95',
+        'fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-on-primary shadow-lg transition-transform active:scale-95',
+        fabOffsetClass,
         className,
       )}
       aria-label="Lisää tehtävä"

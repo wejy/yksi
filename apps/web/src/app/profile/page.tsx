@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { BottomNav, Button } from '@yksi/ui'
-import { INTEGRATION_CATALOG, formatSyncResult, getProviderLabel } from '@yksi/core'
+import { BottomNav, Button, bottomNavPaddingClass } from '@yksi/ui'
+import { INTEGRATION_CATALOG, formatSyncResult, formatSyncError, getProviderLabel } from '@yksi/core'
 import { SyncOverlay } from '@/components/sync-overlay'
 
 interface Connection {
@@ -117,7 +117,7 @@ export default function ProfilePage() {
       const res = await fetch(`/api/integrations/${providerId}/sync`, { method: 'POST' })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setBanner(data.error ?? 'Synkka epäonnistui.')
+        setBanner(formatSyncError(providerId, data.error ?? 'Synkka epäonnistui.'))
         return
       }
       setBanner(formatSyncResult(providerId, data))
@@ -244,7 +244,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-2xl pb-20">
+    <div className={`mx-auto min-h-screen max-w-2xl ${bottomNavPaddingClass}`}>
       <header className="fixed top-0 z-50 flex h-16 w-full items-center justify-between border-b border-outline-variant bg-surface px-4">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-on-primary">
@@ -261,7 +261,7 @@ export default function ProfilePage() {
         </button>
       </header>
 
-      <main className="space-y-8 px-4 pb-12 pt-20">
+      <main className="space-y-8 px-4 pt-20">
         {banner ? (
           <div className="rounded-xl border border-outline-variant bg-surface-container-low px-4 py-3 text-sm text-on-surface">
             {banner}

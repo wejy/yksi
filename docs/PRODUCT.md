@@ -24,7 +24,7 @@ Yksi kokoaa kaikki tehtävät ja muistutukset yhteen näkymään — inbox, tän
 - Inbox (tehtävälista) + Today (dashboard) + Kalenteri
 - Tehtävän tiedot -näkymä (luku + perusmuokkaus)
 - Muistutukset (`reminderAt` → push-notifikaatio)
-- Perusfiltterit: lähde, prioriteetti, yhteispinta
+- Perusfiltterit: lähde, prioriteetti, intressi
 - Freemium: ilmainen 3 integraatiolla, premium rajattomilla
 - Mobiili (Expo) + Web (Next.js) rinnakkain
 
@@ -51,16 +51,16 @@ Yksi kokoaa kaikki tehtävät ja muistutukset yhteen näkymään — inbox, tän
 
 Katso yksityiskohdat: [FREEMIUM.md](FREEMIUM.md)
 
-## Yhteispinta (Common Ground)
+## Intressi (Common Ground)
 
-Projektin sijasta käytetään termiä **Yhteispinta** — jaettu konteksti johon tehtävät eri lähteistä ryhmittyvät.
+Projektin sijasta käytetään termiä **Intressi** — jaettu konteksti johon tehtävät eri lähteistä ryhmittyvät. Koodissa ja tietokannassa käytetään edelleen nimitystä `yhteispinta`.
 
 Esimerkkejä:
 - "Työ" — Linear-tiimin tehtävät
 - "Henkilökohtainen" — Notion-tietokannan tehtävät
 - "Asiakas X" — cross-tool -projekti
 
-Käyttäjä voi luoda yhteispintoja manuaalisesti tai ne syntyvät automaattisesti integraatiolähteestä (esim. Linear Project → Yhteispinta).
+Käyttäjä voi luoda intressejä manuaalisesti (`POST /api/yhteispinnat`) tai ne syntyvät automaattisesti integraatiolähteestä (esim. Linear Project → intressi).
 
 ## Ansaintalogiikka
 
@@ -76,4 +76,4 @@ Luontevin hinnoittelu: freemium + kuukausitilaus premiumille.
 - Deduplikointi: sama tehtävä Linearissa ja Notionissa
 - Työblokitus: ehdota kalenteriin aikoja
 - Lisäintegraatiot: Jira, Outlook, Todoist, Asana
-- Automaatiosäännöt: "Kaikki Linear high → Yhteispinta: Työ"
+- Automaatiosäännöt: "Kaikki Linear high → Intressi: Työ"

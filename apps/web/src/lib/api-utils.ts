@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { isProduction } from '@/lib/env'
+import { isIntegrationError } from '@yksi/integrations'
 
 export async function getSession() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -28,6 +29,12 @@ export class ApiError extends Error {
 
 export function apiError(error: unknown) {
   if (error instanceof ApiError) {
+    return NextResponse.json(
+      { error: error.message, code: error.code },
+      { status: error.status },
+    )
+  }
+  if (isIntegrationError(error)) {
     return NextResponse.json(
       { error: error.message, code: error.code },
       { status: error.status },

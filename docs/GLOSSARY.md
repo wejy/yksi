@@ -5,8 +5,10 @@
 | Suomi | Englanti | Kuvaus |
 |-------|----------|--------|
 | Yksi | Yksi | Tuotteen nimi. Unified tehtävienhallinta. |
-| Yhteispinta | Common Ground | Jaettu konteksti johon tehtävät ryhmittyvät. Korvaa "projektin". |
+| Intressi | Common Ground | Jaettu konteksti johon tehtävät ryhmittyvät. Korvaa "projektin". Linear-projekti → intressi. |
 | Tehtävä | Task | Yksittäinen tehtävä tai kalenteritapahtuma. |
+| Deadline | dueAt | Tehtävän määräaika (päivä + kellonaika). |
+| Hälytysaika | reminderAt | Push-muistutuksen ajankohta (voi olla sama kuin deadline). |
 | Lähde | Source | Mistä integraatiosta tehtävä tulee. |
 | Inbox | Inbox | Kaikki avoimet tehtävät listana. |
 | Tänään | Today | Päivän tärkeimmät tehtävät. |
@@ -22,7 +24,7 @@
 | externalUrl | Deep link takaisin lähdejärjestelmään |
 | rawPayload | Alkuperäinen JSON-data lähdejärjestelmästä (debug/synkka) |
 | write-back | Muutoksen synkkaaminen takaisin lähdejärjestelmään |
-| yhteispintaId | FK yhteispinnat-tauluun |
+| yhteispinta / yhteispintaId | DB- ja kooditermi intressille (`yhteispinnat`-taulu, FK tehtävässä) |
 
 ## Integraatiot
 
@@ -67,7 +69,7 @@
 | BottomNav | Alapalkin tab-navigaatio |
 | TaskCard | Tehtäväkortti listassa |
 | PriorityBadge | Prioriteetti-pill (Korkea/Normaali/Matala) |
-| CategoryChip | Filtteri-pill (Kaikki, Työ, Koti...) |
+| CategoryChip | Intressi-filtteri-pill |
 | BentoSettingCard | Asetuskortti tehtävän tiedoissa |
 | ProgressRing | Edistymisrengas today-näkymässä |
 | TimedTaskCard | Aikaleimattu tehtävä kalenterissa |

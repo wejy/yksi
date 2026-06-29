@@ -2,9 +2,12 @@ import {
   mapLinearPriority,
   mapLinearStatus,
   getLinearYhteispintaName,
+  normalizeTaskContent,
   YKSI_LINEAR_OAUTH_CLIENT_ID,
   type LinearIssue,
 } from '@yksi/core'
+import { IntegrationError } from '../errors'
+import { mapLinearGraphqlErrors, mapLinearHttpError, type LinearGraphqlError } from './errors'
 
 export const LINEAR_AUTH_URL = 'https://linear.app/oauth/authorize'
 export const LINEAR_TOKEN_URL = 'https://api.linear.app/oauth/token'
@@ -107,18 +110,48 @@ async function linearGraphql<T>(
   query: string,
   variables?: Record<string, unknown>,
 ): Promise<T> {
-  const res = await fetch(LINEAR_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: accessToken,
-    },
-    body: JSON.stringify({ query, variables }),
-  })
-  if (!res.ok) throw new Error(`Linear API error: ${res.status}`)
-  const json = (await res.json()) as { data?: T; errors?: unknown[] }
-  if (json.errors?.length) throw new Error('Linear GraphQL error')
-  if (!json.data) throw new Error('Linear GraphQL returned no data')
+  let res: Response
+  try {
+    res = await fetch(LINEAR_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: accessToken,
+      },
+      body: JSON.stringify({ query, variables }),
+    })
+  } catch {
+    throw new IntegrationError(
+      'LINEAR_NETWORK_ERROR',
+      'Yhteyttä Lineariin ei saatu. Tarkista verkkoyhteys ja yritä uudelleen.',
+      502,
+    )
+  }
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as {
+      errors?: LinearGraphqlError[]
+    } | null
+    if (body?.errors?.length) {
+      throw mapLinearGraphqlErrors(body.errors)
+    }
+    throw mapLinearHttpError(res.status)
+  }
+
+  const json = (await res.json()) as {
+    data?: T
+    errors?: LinearGraphqlError[]
+  }
+  if (json.errors?.length) {
+    throw mapLinearGraphqlErrors(json.errors)
+  }
+  if (!json.data) {
+    throw new IntegrationError(
+      'LINEAR_EMPTY_RESPONSE',
+      'Linear ei palauttanut dataa. Yritä synkkaa uudelleen.',
+      502,
+    )
+  }
   return json.data
 }
 
@@ -128,8 +161,8 @@ export async function fetchLinearIssues(
 ): Promise<LinearIssue[]> {
   const query = since
     ? `
-    query Issues($since: DateTime!) {
-      issues(filter: { updatedAt: { gte: $since } }, first: 100) {
+    query Issues($since: DateTimeOrDuration!) {
+      issues(filter: { updatedAt: { gt: $since } }, first: 100) {
         nodes {
           id title description url dueDate priority
           state { type name }
@@ -154,22 +187,32 @@ export async function fetchLinearIssues(
     }
   `
 
+  // Small overlap avoids missing issues updated at the exact last sync timestamp.
+  const sinceValue = since
+    ? new Date(since.getTime() - 60_000).toISOString()
+    : undefined
+
   const data = await linearGraphql<{ issues?: { nodes: LinearIssue[] } }>(
     accessToken,
     query,
-    since ? { since: since.toISOString() } : undefined,
+    sinceValue ? { since: sinceValue } : undefined,
   )
   return data.issues?.nodes ?? []
 }
 
 export function normalizeLinearIssue(issue: LinearIssue, userId: string) {
+  const { contentDocument, description } = normalizeTaskContent({
+    markdown: issue.description,
+  })
+
   return {
     userId,
     source: 'linear' as const,
     externalId: issue.id,
     externalUrl: issue.url,
     title: issue.title,
-    description: issue.description ?? null,
+    description,
+    contentDocument,
     status: mapLinearStatus(issue.state.type),
     priority: mapLinearPriority(issue.priority),
     dueAt: issue.dueDate ? new Date(issue.dueDate) : null,

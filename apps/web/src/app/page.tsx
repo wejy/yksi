@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { BottomNav, ProgressRing, Button } from '@yksi/ui'
+import { BottomNav, ProgressRing, Button, bottomNavPaddingClass } from '@yksi/ui'
 
 interface TodayTask {
   id: string
@@ -63,7 +63,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-2xl pb-20">
+    <div className={`mx-auto min-h-screen max-w-2xl ${bottomNavPaddingClass}`}>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-outline-variant bg-surface-container-lowest px-6 py-4">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-on-primary">

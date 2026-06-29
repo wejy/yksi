@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
 import { apiFetch } from '@/lib/api'
+import { useTabScrollBottomPadding } from '@/lib/layout'
 
 interface Task {
   id: string
@@ -15,6 +16,7 @@ interface Task {
 // Based on ui/kalenteri/code.html
 export default function CalendarScreen() {
   const router = useRouter()
+  const scrollBottomPadding = useTabScrollBottomPadding()
   const [tasks, setTasks] = useState<Task[]>([])
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [loading, setLoading] = useState(true)
@@ -86,7 +88,10 @@ export default function CalendarScreen() {
       {loading ? (
         <ActivityIndicator className="mt-8" color="#3525cd" />
       ) : (
-        <ScrollView className="flex-1 px-4 py-4">
+        <ScrollView
+          className="flex-1 px-4 py-4"
+          contentContainerStyle={{ paddingBottom: scrollBottomPadding }}
+        >
           <Text className="mb-3 font-semibold text-on-surface">
             {selectedDate.toLocaleDateString('fi-FI', {
               weekday: 'long',

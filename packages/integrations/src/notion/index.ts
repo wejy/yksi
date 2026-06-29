@@ -1,4 +1,4 @@
-import { extractNotionTitle, type NotionPage, type NotionPropertyMapping } from '@yksi/core'
+import { extractNotionTitle, normalizeTaskContent, type NotionBlockLike, type NotionPage, type NotionPropertyMapping } from '@yksi/core'
 import { YKSI_NOTION_OAUTH_CLIENT_ID } from '@yksi/core'
 
 export const NOTION_AUTH_URL = 'https://api.notion.com/v1/oauth/authorize'
@@ -110,6 +110,34 @@ export async function queryNotionDatabase(
   return data.results as NotionPage[]
 }
 
+export async function fetchNotionPageBlocks(
+  accessToken: string,
+  pageId: string,
+): Promise<NotionBlockLike[]> {
+  const blocks: NotionBlockLike[] = []
+  let cursor: string | undefined
+
+  do {
+    const url = new URL(`${NOTION_API_URL}/blocks/${pageId}/children`)
+    url.searchParams.set('page_size', '100')
+    if (cursor) url.searchParams.set('start_cursor', cursor)
+
+    const res = await fetch(url, { headers: notionHeaders(accessToken) })
+    if (!res.ok) break
+
+    const data = (await res.json()) as {
+      results: NotionBlockLike[]
+      has_more: boolean
+      next_cursor: string | null
+    }
+
+    blocks.push(...data.results)
+    cursor = data.has_more ? data.next_cursor ?? undefined : undefined
+  } while (cursor)
+
+  return blocks
+}
+
 function notionHeaders(accessToken: string) {
   return {
     Authorization: `Bearer ${accessToken}`,
@@ -154,9 +182,19 @@ export function normalizeNotionPage(
   userId: string,
   databaseName: string,
   mapping: NotionPropertyMapping,
+  notionBlocks?: NotionBlockLike[],
+  notionDatabaseId?: string,
 ) {
   const props = page.properties
   const statusRaw = mapping.statusKey ? extractStatus(props[mapping.statusKey]) : null
+  const propertyDescription = mapping.descriptionKey
+    ? extractRichText(props[mapping.descriptionKey])
+    : null
+
+  const { contentDocument, description } = normalizeTaskContent({
+    notionBlocks: notionBlocks?.length ? notionBlocks : null,
+    plainText: propertyDescription,
+  })
 
   return {
     userId,
@@ -164,9 +202,8 @@ export function normalizeNotionPage(
     externalId: page.id,
     externalUrl: page.url,
     title: extractNotionTitle(props, mapping.titleKey),
-    description: mapping.descriptionKey
-      ? extractRichText(props[mapping.descriptionKey])
-      : null,
+    description,
+    contentDocument,
     status: statusRaw ? (STATUS_MAP[statusRaw] ?? 'open') : 'open',
     priority: 'none' as const,
     dueAt: mapping.dueDateKey ? extractDate(props[mapping.dueDateKey]) : null,
@@ -176,7 +213,9 @@ export function normalizeNotionPage(
     labels: mapping.labelsKey ? extractLabels(props[mapping.labelsKey]) : [],
     rawPayload: page as unknown as Record<string, unknown>,
     yhteispintaName: databaseName,
-    yhteispintaMapping: { notionDatabaseId: page.id.split('-')[0] },
+    yhteispintaMapping: notionDatabaseId
+      ? { notionDatabaseId }
+      : { notionDatabaseId: page.id.split('-')[0] },
   }
 }
 

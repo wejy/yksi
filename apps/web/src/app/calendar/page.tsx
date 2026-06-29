@@ -7,6 +7,7 @@ import {
   BottomNav,
   CalendarGrid,
   TaskCard,
+  bottomNavPaddingClass,
 } from '@yksi/ui'
 
 interface Task {
@@ -75,7 +76,7 @@ export default function CalendarPage() {
   })
 
   return (
-    <div className="mx-auto min-h-screen max-w-2xl pb-20 pt-16">
+    <div className={`mx-auto min-h-screen max-w-2xl pt-16 ${bottomNavPaddingClass}`}>
       <TopAppBar onNotifications={() => {}} />
 
       <main className="space-y-6 p-4">

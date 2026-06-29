@@ -123,6 +123,7 @@ export const tasks = pgTable(
     externalUrl: text('external_url'),
     title: text('title').notNull(),
     description: text('description'),
+    contentDocument: jsonb('content_document'),
     status: taskStatusEnum('status').notNull().default('open'),
     priority: taskPriorityEnum('priority').notNull().default('none'),
     dueAt: timestamp('due_at', { withTimezone: true }),

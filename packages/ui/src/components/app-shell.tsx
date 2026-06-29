@@ -1,4 +1,3 @@
-// Based on ui/teht_v_lista/code.html and ui/kalenteri/code.html
 import * as React from 'react'
 import { cn } from '../lib/utils'
 import { navItems } from '../tokens'
@@ -69,7 +68,7 @@ export function BottomNav({ activeTab, onTabChange, className }: BottomNavProps)
   return (
     <nav
       className={cn(
-        'fixed bottom-0 z-50 flex h-16 w-full items-center justify-around border-t border-outline-variant/50 bg-surface-container-lowest/90 backdrop-blur-md',
+        'fixed inset-x-0 bottom-0 z-50 flex min-h-16 items-center justify-around border-t border-outline-variant/50 bg-surface-container-lowest/90 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-md',
         className,
       )}
     >

@@ -15,7 +15,7 @@ Yksi on unified tehtävienhallinta-sovellus. MVP: Linear + Notion + Google Calen
 
 1. **Älä muuta `ui/`-kansion HTML-mockupeja** — ne ovat design-referenssiä
 2. **Brändi: Yksi** (ei "Unified") kaikessa käyttöliittymässä ja uudessa koodissa
-3. **Domain-termit**: käytä "Yhteispinta" (FI) / `yhteispinta` / `commonGrounds` (koodi)
+3. **Domain-termit**: käytä **Intressi** (FI, UI) / `yhteispinta` / `yhteispinnat` (koodi ja DB)
 4. **Minimoi scope** — toteuta vain pyydetty, älä refaktoroi sivutuotteena
 5. **Monorepo-importit**: `@yksi/db`, `@yksi/core`, `@yksi/ui`, `@yksi/integrations`
 

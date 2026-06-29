@@ -17,7 +17,7 @@ Hae käyttäjän tehtävät.
 | `status` | string | `open`, `in_progress`, `done`, `cancelled` |
 | `source` | string | `linear`, `notion`, `google_calendar`, `native` |
 | `priority` | string | `none`, `low`, `medium`, `high`, `urgent` |
-| `yhteispintaId` | uuid | Suodata yhteispinnan mukaan |
+| `yhteispintaId` | uuid | Suodata intressin mukaan |
 | `dueBefore` | ISO date | Erääntyy ennen |
 | `dueAfter` | ISO date | Erääntyy jälkeen |
 | `search` | string | Hae otsikosta/kuvauksesta |
@@ -134,15 +134,19 @@ Poista natiivi tehtävä. Integraatiotehtäviä ei voi poistaa (vain piilottaa).
 
 ---
 
-## Yhteispinnat
+## Intressit (`/api/yhteispinnat`)
+
+Koodissa ja tietokannassa `yhteispinnat`; API-vastauksissa avain `intressit`.
 
 ### GET /api/yhteispinnat
+
+**Query:** `usedInTasks=true` — palauttaa vain intressit joissa on vähintään yksi tehtävä.
 
 **Response 200:**
 
 ```json
 {
-  "yhteispinnat": [
+  "intressit": [
     {
       "id": "uuid",
       "name": "Työ",
@@ -157,9 +161,13 @@ Poista natiivi tehtävä. Integraatiotehtäviä ei voi poistaa (vain piilottaa).
 
 ### POST /api/yhteispinnat
 
+Luo manuaalinen intressi.
+
 ```json
 { "name": "Asiakas X", "color": "#7e3000", "icon": "person" }
 ```
+
+**Response 201:** Luotu intressi-objekti.
 
 ### PATCH /api/yhteispinnat/:id
 

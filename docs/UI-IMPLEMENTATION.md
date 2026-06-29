@@ -116,9 +116,9 @@ Rakenne:
 2. Otsikko-input (h2-kokoinen, borderless)
 3. Kuvaus-textarea
 4. BentoSettingCard-grid (3 col):
-   - Muistutus (reminderAt)
-   - Määräpäivä (dueAt)
-   - Yhteispinta (kategoria)
+   - Hälytysaika (`reminderAt`)
+   - Deadline (`dueAt`)
+   - Intressi (`yhteispintaId`)
 5. SubtaskList (MVP: vain natiivitehtäville, integraatioissa piilota)
 6. Footer: "Tallenna muutokset" — primary pill button
 

@@ -1,15 +1,35 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { TopAppBar, Button, Input } from '@yksi/ui'
+import { TopAppBar, Button, Input, screenBottomPaddingClass } from '@yksi/ui'
+import type { TaskContentDocument } from '@yksi/core'
+import { emptyTaskContent, fromDatetimeLocalValue } from '@yksi/core'
+import { TaskContentEditor } from '@/components/task-content-editor'
+import { DeadlineReminderFields } from '@/components/deadline-reminder-fields'
+import { IntressiField, type IntressiOption } from '@/components/intressi-field'
 
 export default function NewTaskPage() {
   const router = useRouter()
   const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
+  const [contentDocument, setContentDocument] = useState<TaskContentDocument>(emptyTaskContent())
+  const [intressit, setIntressit] = useState<IntressiOption[]>([])
+  const [intressiId, setIntressiId] = useState('')
+  const [deadline, setDeadline] = useState('')
+  const [reminder, setReminder] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetch('/api/yhteispinnat')
+      .then((r) => r.json())
+      .then((data) => setIntressit(data.intressit ?? []))
+      .catch(console.error)
+  }, [])
+
+  const handleContentChange = useCallback((doc: TaskContentDocument) => {
+    setContentDocument(doc)
+  }, [])
 
   async function handleCreate() {
     if (!title.trim()) {
@@ -25,7 +45,10 @@ export default function NewTaskPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: title.trim(),
-          description: description.trim() || null,
+          contentDocument,
+          yhteispintaId: intressiId || null,
+          dueAt: fromDatetimeLocalValue(deadline),
+          reminderAt: fromDatetimeLocalValue(reminder),
         }),
       })
       if (!res.ok) {
@@ -41,7 +64,7 @@ export default function NewTaskPage() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-2xl pb-24 pt-16">
+    <div className={`mx-auto min-h-screen max-w-2xl pt-16 ${screenBottomPaddingClass}`}>
       <TopAppBar
         title="Uusi tehtävä"
         showBack
@@ -61,23 +84,39 @@ export default function NewTaskPage() {
           />
         </div>
 
+        <IntressiField
+          intressit={intressit}
+          value={intressiId}
+          onChange={setIntressiId}
+          onCreated={(intressi) => setIntressit((prev) => [...prev, intressi])}
+        />
+
+        <DeadlineReminderFields
+          deadline={deadline}
+          reminder={reminder}
+          onDeadlineChange={setDeadline}
+          onReminderChange={setReminder}
+        />
+
         <div>
           <label className="mb-1 block text-sm font-medium text-on-surface-variant">
-            Kuvaus
+            Sisältö
           </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Lisätiedot (valinnainen)"
-            rows={4}
-            className="w-full resize-none rounded-lg border border-outline-variant bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          <p className="mb-2 text-xs text-on-surface-variant">
+            Käytä / valikkoa otsikoille, tehtäville, kuville ja listoille
+          </p>
+          <TaskContentEditor
+            value={contentDocument}
+            onChange={handleContentChange}
+            editable
+            className="min-h-[240px] overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
           />
         </div>
 
         {error ? <p className="text-sm text-error">{error}</p> : null}
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 border-t border-outline-variant bg-surface-container-lowest p-4">
+      <div className="fixed bottom-0 left-0 right-0 border-t border-outline-variant bg-surface-container-lowest p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
         <div className="mx-auto max-w-2xl">
           <Button className="w-full" onClick={handleCreate} disabled={saving}>
             {saving ? 'Luodaan...' : 'Luo tehtävä'}
