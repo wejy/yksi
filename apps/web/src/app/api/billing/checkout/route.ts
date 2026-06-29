@@ -1,14 +1,7 @@
 import { requireAuth, apiError, jsonResponse } from '@/lib/api-utils'
-import Stripe from 'stripe'
-import { eq } from 'drizzle-orm'
-import { getDb, users } from '@yksi/db'
-import { NextResponse } from 'next/server'
+import { getStripe } from '@/lib/stripe'
 
-function getStripe() {
-  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02-24.acacia' })
-}
-
-export async function POST(request: Request) {
+export async function POST() {
   try {
     const session = await requireAuth()
     const stripe = getStripe()

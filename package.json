@@ -16,8 +16,8 @@
     "db:seed": "pnpm --filter @yksi/web db:seed"
   },
   "devDependencies": {
-    "turbo": "^2.5.4",
-    "typescript": "^5.8.3"
+    "turbo": "^2.10.0",
+    "typescript": "^6.0.3"
   },
   "packageManager": "pnpm@9.15.9",
   "engines": {

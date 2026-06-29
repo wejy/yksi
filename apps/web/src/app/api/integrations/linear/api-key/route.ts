@@ -45,15 +45,16 @@ export async function POST(request: Request) {
       })
       .returning()
 
+    let syncResult = { created: 0, updated: 0 }
     if (connection) {
       try {
-        await syncConnection(connection.id, 'linear', session.user.id)
+        syncResult = await syncConnection(connection.id, 'linear', session.user.id)
       } catch (syncError) {
         console.error('Initial Linear API key sync failed:', syncError)
       }
     }
 
-    return jsonResponse({ ok: true })
+    return jsonResponse({ ok: true, ...syncResult })
   } catch (error) {
     return apiError(error)
   }

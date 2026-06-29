@@ -128,9 +128,10 @@ export async function GET(
       })
       .returning()
 
+    let syncResult = { created: 0, updated: 0 }
     if (connection) {
       try {
-        await syncConnection(
+        syncResult = await syncConnection(
           connection.id,
           provider as IntegrationProvider,
           session.user.id,
@@ -140,9 +141,12 @@ export async function GET(
       }
     }
 
-    return clearStateCookie(
-      profileRedirect(`/profile?connected=${provider}`, request),
-    )
+    const queryParams = new URLSearchParams({
+      connected: provider,
+      created: String(syncResult.created),
+      updated: String(syncResult.updated),
+    })
+    return clearStateCookie(profileRedirect(`/profile?${queryParams.toString()}`, request))
   } catch (error) {
     console.error('OAuth callback error:', error)
     const response = profileRedirect('/profile?error=oauth_failed', request)

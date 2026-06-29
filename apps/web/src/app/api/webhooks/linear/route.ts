@@ -3,13 +3,16 @@ import { syncLinearConnection } from '@yksi/integrations'
 import { eq } from 'drizzle-orm'
 import { getDb, integrationConnections } from '@yksi/db'
 import { NextResponse } from 'next/server'
-import { createHmac } from 'node:crypto'
+import { createHmac, timingSafeEqual } from 'node:crypto'
 
 function verifyLinearSignature(body: string, signature: string | null): boolean {
-  const secret = process.env.LINEAR_WEBHOOK_SECRET
+  const secret = process.env.LINEAR_WEBHOOK_SECRET?.trim()
   if (!secret || !signature) return false
   const computed = createHmac('sha256', secret).update(body).digest('hex')
-  return computed === signature
+  const provided = Buffer.from(signature)
+  const expected = Buffer.from(computed)
+  if (provided.length !== expected.length) return false
+  return timingSafeEqual(provided, expected)
 }
 
 export async function POST(request: Request) {

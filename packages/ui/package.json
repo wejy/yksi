@@ -13,19 +13,19 @@
     "lint": "eslint src/"
   },
   "dependencies": {
+    "@radix-ui/react-checkbox": "^1.3.5",
+    "@radix-ui/react-slot": "^1.3.0",
     "@yksi/core": "workspace:*",
-    "@radix-ui/react-checkbox": "^1.3.2",
-    "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@types/react": "^19.2.17",
     "@yksi/config": "workspace:*",
-    "@types/react": "^19.1.8",
-    "react": "^19.1.0",
-    "tailwindcss": "^4.1.11",
-    "typescript": "^5.8.3"
+    "react": "^19.2.7",
+    "tailwindcss": "^4.3.1",
+    "typescript": "^6.0.3"
   },
   "peerDependencies": {
     "react": "^19.0.0"

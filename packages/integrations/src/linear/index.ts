@@ -102,17 +102,47 @@ export async function validateLinearApiKey(apiKey: string): Promise<boolean> {
   return !json.errors?.length
 }
 
+async function linearGraphql<T>(
+  accessToken: string,
+  query: string,
+  variables?: Record<string, unknown>,
+): Promise<T> {
+  const res = await fetch(LINEAR_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: accessToken,
+    },
+    body: JSON.stringify({ query, variables }),
+  })
+  if (!res.ok) throw new Error(`Linear API error: ${res.status}`)
+  const json = (await res.json()) as { data?: T; errors?: unknown[] }
+  if (json.errors?.length) throw new Error('Linear GraphQL error')
+  if (!json.data) throw new Error('Linear GraphQL returned no data')
+  return json.data
+}
+
 export async function fetchLinearIssues(
   accessToken: string,
   since?: Date,
 ): Promise<LinearIssue[]> {
-  const filter = since
-    ? `filter: { updatedAt: { gte: "${since.toISOString()}" } }`
-    : ''
-
-  const query = `
-    query {
-      issues(${filter}, first: 100) {
+  const query = since
+    ? `
+    query Issues($since: DateTime!) {
+      issues(filter: { updatedAt: { gte: $since } }, first: 100) {
+        nodes {
+          id title description url dueDate priority
+          state { type name }
+          labels { nodes { name } }
+          project { id name }
+          team { id name }
+        }
+      }
+    }
+  `
+    : `
+    query Issues {
+      issues(first: 100) {
         nodes {
           id title description url dueDate priority
           state { type name }
@@ -124,18 +154,12 @@ export async function fetchLinearIssues(
     }
   `
 
-  const res = await fetch(LINEAR_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: accessToken,
-    },
-    body: JSON.stringify({ query }),
-  })
-
-  if (!res.ok) throw new Error(`Linear API error: ${res.status}`)
-  const json = (await res.json()) as { data?: { issues?: { nodes: LinearIssue[] } } }
-  return json.data?.issues?.nodes ?? []
+  const data = await linearGraphql<{ issues?: { nodes: LinearIssue[] } }>(
+    accessToken,
+    query,
+    since ? { since: since.toISOString() } : undefined,
+  )
+  return data.issues?.nodes ?? []
 }
 
 export function normalizeLinearIssue(issue: LinearIssue, userId: string) {
@@ -168,22 +192,17 @@ export async function updateLinearIssueStatus(
   issueId: string,
   stateId: string,
 ): Promise<void> {
-  const mutation = `
-    mutation {
-      issueUpdate(id: "${issueId}", input: { stateId: "${stateId}" }) {
+  await linearGraphql(
+    accessToken,
+    `
+    mutation UpdateIssueStatus($issueId: String!, $stateId: String!) {
+      issueUpdate(id: $issueId, input: { stateId: $stateId }) {
         success
       }
     }
-  `
-  const res = await fetch(LINEAR_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: accessToken,
-    },
-    body: JSON.stringify({ query: mutation }),
-  })
-  if (!res.ok) throw new Error(`Linear update failed: ${res.status}`)
+  `,
+    { issueId, stateId },
+  )
 }
 
 export async function updateLinearIssuePriority(
@@ -191,22 +210,17 @@ export async function updateLinearIssuePriority(
   issueId: string,
   priority: number,
 ): Promise<void> {
-  const mutation = `
-    mutation {
-      issueUpdate(id: "${issueId}", input: { priority: ${priority} }) {
+  await linearGraphql(
+    accessToken,
+    `
+    mutation UpdateIssuePriority($issueId: String!, $priority: Int!) {
+      issueUpdate(id: $issueId, input: { priority: $priority }) {
         success
       }
     }
-  `
-  const res = await fetch(LINEAR_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: accessToken,
-    },
-    body: JSON.stringify({ query: mutation }),
-  })
-  if (!res.ok) throw new Error(`Linear priority update failed: ${res.status}`)
+  `,
+    { issueId, priority },
+  )
 }
 
 const TASK_TO_LINEAR_STATE_TYPE: Record<string, string> = {
@@ -225,8 +239,8 @@ export async function resolveLinearStateId(
   if (!targetType) return null
 
   const query = `
-    query {
-      issue(id: "${issueId}") {
+    query IssueStates($issueId: String!) {
+      issue(id: $issueId) {
         team {
           states {
             nodes { id type name }
@@ -236,28 +250,15 @@ export async function resolveLinearStateId(
     }
   `
 
-  const res = await fetch(LINEAR_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: accessToken,
-    },
-    body: JSON.stringify({ query }),
-  })
-
-  if (!res.ok) throw new Error(`Linear state lookup failed: ${res.status}`)
-
-  const json = (await res.json()) as {
-    data?: {
-      issue?: {
-        team?: {
-          states?: { nodes: { id: string; type: string; name: string }[] }
-        }
+  const data = await linearGraphql<{
+    issue?: {
+      team?: {
+        states?: { nodes: { id: string; type: string; name: string }[] }
       }
     }
-  }
+  }>(accessToken, query, { issueId })
 
-  const states = json.data?.issue?.team?.states?.nodes ?? []
+  const states = data.issue?.team?.states?.nodes ?? []
   const match = states.find((s) => s.type === targetType)
   return match?.id ?? null
 }

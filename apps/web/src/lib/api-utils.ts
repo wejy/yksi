@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { isProduction } from '@/lib/env'
 
 export async function getSession() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -32,7 +33,11 @@ export function apiError(error: unknown) {
       { status: error.status },
     )
   }
-  console.error(error)
+  if (!isProduction()) {
+    console.error(error)
+  } else {
+    console.error('Unhandled API error')
+  }
   return NextResponse.json(
     { error: 'Internal server error', code: 'INTERNAL_ERROR' },
     { status: 500 },

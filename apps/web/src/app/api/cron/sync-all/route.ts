@@ -1,15 +1,13 @@
 import { jsonResponse } from '@/lib/api-utils'
+import { verifyCronRequest } from '@/lib/cron-auth'
 import { syncConnection } from '@yksi/integrations'
 import { eq } from 'drizzle-orm'
 import { getDb, integrationConnections, syncLogs } from '@yksi/db'
 import type { IntegrationProvider } from '@yksi/core'
-import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const unauthorized = verifyCronRequest(request)
+  if (unauthorized) return unauthorized
 
   const db = getDb()
   const connections = await db

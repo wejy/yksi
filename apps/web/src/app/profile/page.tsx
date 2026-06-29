@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { BottomNav, Button } from '@yksi/ui'
-import { INTEGRATION_CATALOG } from '@yksi/core'
+import { INTEGRATION_CATALOG, formatSyncResult, getProviderLabel } from '@yksi/core'
+import { SyncOverlay } from '@/components/sync-overlay'
 
 interface Connection {
   id: string
@@ -76,12 +77,29 @@ export default function ProfilePage() {
   const [apiKeyModal, setApiKeyModal] = useState<ApiKeyProvider | null>(null)
   const [apiKeyValue, setApiKeyValue] = useState('')
   const [connectingApiKey, setConnectingApiKey] = useState(false)
+  const [syncingProvider, setSyncingProvider] = useState<string | null>(null)
+  const [syncOverlay, setSyncOverlay] = useState<{
+    provider: string
+    isFirstConnect: boolean
+  } | null>(null)
 
   useEffect(() => {
     const error = searchParams.get('error')
     const connected = searchParams.get('connected')
-    if (connected) {
-      setBanner(`${connected} yhdistetty onnistuneesti.`)
+    const created = searchParams.get('created')
+    const updated = searchParams.get('updated')
+
+    if (connected && created !== null && updated !== null) {
+      setBanner(
+        formatSyncResult(connected, {
+          created: Number(created) || 0,
+          updated: Number(updated) || 0,
+        }),
+      )
+      router.replace('/profile', { scroll: false })
+    } else if (connected) {
+      setBanner(`${getProviderLabel(connected)} yhdistetty onnistuneesti.`)
+      router.replace('/profile', { scroll: false })
     } else if (error === 'oauth_denied') {
       setBanner('Yhdistäminen peruutettiin.')
     } else if (error === 'oauth_failed') {
@@ -89,7 +107,26 @@ export default function ProfilePage() {
     } else if (error === 'integration_not_configured') {
       setBanner('Integraatiota ei ole vielä konfiguroitu palvelimella.')
     }
-  }, [searchParams])
+  }, [searchParams, router])
+
+  async function runSync(providerId: string, isFirstConnect = false) {
+    setSyncOverlay({ provider: providerId, isFirstConnect })
+    setSyncingProvider(providerId)
+    setBanner(null)
+    try {
+      const res = await fetch(`/api/integrations/${providerId}/sync`, { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setBanner(data.error ?? 'Synkka epäonnistui.')
+        return
+      }
+      setBanner(formatSyncResult(providerId, data))
+      await refreshConnections()
+    } finally {
+      setSyncingProvider(null)
+      setSyncOverlay(null)
+    }
+  }
 
   useEffect(() => {
     fetch('/api/user/me')
@@ -171,7 +208,9 @@ export default function ProfilePage() {
   async function handleApiKeyConnect() {
     if (!apiKeyModal) return
 
+    const provider = apiKeyModal
     setConnectingApiKey(true)
+    setSyncOverlay({ provider, isFirstConnect: true })
     setBanner(null)
     try {
       const res = await fetch(`/api/integrations/${apiKeyModal}/api-key`, {
@@ -186,15 +225,22 @@ export default function ProfilePage() {
       }
       setApiKeyModal(null)
       setApiKeyValue('')
-      setBanner(API_KEY_MODAL[apiKeyModal].successMessage)
+      if (provider === 'notion' && data.databaseCount === 0) {
+        setBanner(
+          'Notion yhdistetty, mutta tietokantoja ei löytynyt. Jaa tietokannat integraatiolle Notionissa ja synkkaa uudelleen.',
+        )
+      } else {
+        setBanner(formatSyncResult(provider, data))
+      }
       await refreshConnections()
     } finally {
       setConnectingApiKey(false)
+      setSyncOverlay(null)
     }
   }
 
   async function handleSync(providerId: string) {
-    await fetch(`/api/integrations/${providerId}/sync`, { method: 'POST' })
+    await runSync(providerId, false)
   }
 
   return (
@@ -291,7 +337,7 @@ export default function ProfilePage() {
               return (
                 <div
                   key={provider.id}
-                  className={`flex h-40 flex-col justify-between rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm transition-shadow hover:shadow-md ${!isAvailable ? 'opacity-80' : ''}`}
+                  className={`flex min-h-44 flex-col justify-between rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm transition-shadow hover:shadow-md ${!isAvailable ? 'opacity-80' : ''}`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="rounded-lg border border-outline-variant bg-surface p-2">
@@ -307,13 +353,9 @@ export default function ProfilePage() {
                         Tulossa
                       </span>
                     ) : connected ? (
-                      <button
-                        type="button"
-                        onClick={() => handleSync(provider.id)}
-                        className="rounded-full border border-primary-container bg-surface-container-high px-2 py-1 text-xs font-medium text-primary"
-                      >
+                      <span className="rounded-full border border-primary-container bg-surface-container-high px-2 py-1 text-xs font-medium text-primary">
                         Yhdistetty
-                      </button>
+                      </span>
                     ) : (
                       <button
                         type="button"
@@ -327,6 +369,16 @@ export default function ProfilePage() {
                   <div>
                     <p className="font-bold">{provider.name}</p>
                     <p className="text-sm text-on-surface-variant">{provider.description}</p>
+                    {connected && isAvailable ? (
+                      <button
+                        type="button"
+                        onClick={() => handleSync(provider.id)}
+                        disabled={syncingProvider === provider.id}
+                        className="mt-3 w-full rounded-full border border-primary bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
+                      >
+                        {syncingProvider === provider.id ? 'Synkronoidaan…' : 'Synkronoi nyt'}
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               )
@@ -362,7 +414,18 @@ export default function ProfilePage() {
         }}
       />
 
-      {apiKeyModal ? (
+      {syncOverlay ? (
+        <SyncOverlay
+          title={
+            syncOverlay.isFirstConnect
+              ? `Haetaan tehtäviä: ${getProviderLabel(syncOverlay.provider)}`
+              : `Synkronoidaan: ${getProviderLabel(syncOverlay.provider)}`
+          }
+          description="Tämä voi kestää hetken, jos tehtäviä on paljon."
+        />
+      ) : null}
+
+      {apiKeyModal && !syncOverlay ? (
         <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 p-4 sm:items-center">
           <div className="w-full max-w-md rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-lg">
             <h3 className="text-lg font-bold text-on-surface">
@@ -401,7 +464,7 @@ export default function ProfilePage() {
                 onClick={handleApiKeyConnect}
                 disabled={connectingApiKey || !apiKeyValue.trim()}
               >
-                {connectingApiKey ? 'Yhdistetään...' : 'Yhdistä'}
+                {connectingApiKey ? 'Yhdistetään ja synkataan…' : 'Yhdistä'}
               </Button>
               <Button
                 variant="outline"

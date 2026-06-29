@@ -1,14 +1,11 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+import { getAuthSecret } from '@/lib/env'
 
 export const OAUTH_STATE_COOKIE = 'yksi_oauth_state'
 const MAX_AGE_SECONDS = 600
 
-function getSecret() {
-  return process.env.BETTER_AUTH_SECRET ?? 'dev-secret-change-in-production'
-}
-
 function sign(payload: string): string {
-  return createHmac('sha256', getSecret()).update(payload).digest('hex')
+  return createHmac('sha256', getAuthSecret()).update(payload).digest('hex')
 }
 
 export function generateOAuthState(): string {

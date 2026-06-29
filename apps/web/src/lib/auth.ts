@@ -3,12 +3,13 @@ import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
 import { getDb, users, sessions, accounts, verifications } from '@yksi/db'
+import { getAuthSecret } from '@/lib/env'
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
 
 export const auth = betterAuth({
-  secret: process.env.BETTER_AUTH_SECRET ?? 'dev-secret-change-in-production',
+  secret: getAuthSecret(),
   baseURL: process.env.BETTER_AUTH_URL ?? YKSI_DEV_URL,
   database: drizzleAdapter(getDb(), {
     provider: 'pg',

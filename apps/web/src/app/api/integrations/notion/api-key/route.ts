@@ -61,15 +61,16 @@ export async function POST(request: Request) {
       })
       .returning()
 
+    let syncResult = { created: 0, updated: 0 }
     if (connection) {
       try {
-        await syncConnection(connection.id, 'notion', session.user.id)
+        syncResult = await syncConnection(connection.id, 'notion', session.user.id)
       } catch (syncError) {
         console.error('Initial Notion API key sync failed:', syncError)
       }
     }
 
-    return jsonResponse({ ok: true, databaseCount: databases.length })
+    return jsonResponse({ ok: true, databaseCount: databases.length, ...syncResult })
   } catch (error) {
     return apiError(error)
   }

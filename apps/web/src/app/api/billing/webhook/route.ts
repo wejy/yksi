@@ -1,12 +1,10 @@
 import { jsonResponse } from '@/lib/api-utils'
-import Stripe from 'stripe'
+import { getStripe } from '@/lib/stripe'
+import type Stripe from 'stripe'
 import { eq } from 'drizzle-orm'
 import { getDb, users } from '@yksi/db'
 import { NextResponse } from 'next/server'
-
-function getStripe() {
-  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-02-24.acacia' })
-}
+import { requireEnv } from '@/lib/env'
 
 export async function POST(request: Request) {
   const body = await request.text()
@@ -23,7 +21,7 @@ export async function POST(request: Request) {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!,
+      requireEnv('STRIPE_WEBHOOK_SECRET'),
     )
   } catch {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
