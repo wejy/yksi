@@ -54,6 +54,17 @@ export default function TaskDetailPage() {
     router.back()
   }
 
+  async function toggleDone() {
+    if (!task) return
+    const newStatus = task.status === 'done' ? 'open' : 'done'
+    await fetch(`/api/tasks/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
+    })
+    setTask({ ...task, status: newStatus })
+  }
+
   if (!task) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -124,6 +135,14 @@ export default function TaskDetailPage() {
         <p className="text-xs text-on-surface-variant">
           Lähde: {task.source}
         </p>
+
+        <Button
+          variant={task.status === 'done' ? 'outline' : 'default'}
+          className="w-full"
+          onClick={toggleDone}
+        >
+          {task.status === 'done' ? 'Merkitse avoimeksi' : 'Merkitse valmiiksi'}
+        </Button>
       </main>
 
       <div className="fixed bottom-0 left-0 right-0 border-t border-outline-variant bg-surface-container-lowest p-4">

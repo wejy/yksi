@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { BottomNav, Button } from '@yksi/ui'
 import { INTEGRATION_CATALOG } from '@yksi/core'
 
@@ -24,12 +24,72 @@ const SETTINGS = [
   { icon: 'palette', label: 'Teema' },
 ]
 
+type ApiKeyProvider = 'linear' | 'notion'
+
+const API_KEY_MODAL: Record<
+  ApiKeyProvider,
+  {
+    title: string
+    description: string
+    linkHref: string
+    linkLabel: string
+    steps: string[]
+    placeholder: string
+    successMessage: string
+  }
+> = {
+  linear: {
+    title: 'Yhdistä Linear',
+    description:
+      'Luo henkilökohtainen API-avain Linearissa ja liitä se tähän. Ei vaadi palvelimen .env-asetuksia.',
+    linkHref: 'https://linear.app/settings/api',
+    linkLabel: 'Linear → Settings → API',
+    steps: ['Luo uusi Personal API key', 'Liitä avain alle (alkaa yleensä lin_api_)'],
+    placeholder: 'lin_api_...',
+    successMessage: 'Linear yhdistetty onnistuneesti.',
+  },
+  notion: {
+    title: 'Yhdistä Notion',
+    description:
+      'Luo sisäinen integraatio Notionissa ja liitä sen salainen avain tähän. Jaa tehtävä-tietokannat integraatiolle.',
+    linkHref: 'https://www.notion.so/my-integrations',
+    linkLabel: 'Notion → My integrations',
+    steps: [
+      'Luo uusi internal integration',
+      'Kopioi Internal Integration Secret (secret_...)',
+      'Notionissa: avaa tietokanta → ... → Connections → lisää integraatio',
+    ],
+    placeholder: 'secret_... tai ntn_...',
+    successMessage: 'Notion yhdistetty onnistuneesti.',
+  },
+}
+
 // Based on ui/profiili_ja_integraatiot/code.html
 export default function ProfilePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [user, setUser] = useState<User | null>(null)
   const [connections, setConnections] = useState<Connection[]>([])
   const [upgrading, setUpgrading] = useState(false)
+  const [banner, setBanner] = useState<string | null>(null)
+  const [oauthAvailable, setOauthAvailable] = useState<Record<string, boolean>>({})
+  const [apiKeyModal, setApiKeyModal] = useState<ApiKeyProvider | null>(null)
+  const [apiKeyValue, setApiKeyValue] = useState('')
+  const [connectingApiKey, setConnectingApiKey] = useState(false)
+
+  useEffect(() => {
+    const error = searchParams.get('error')
+    const connected = searchParams.get('connected')
+    if (connected) {
+      setBanner(`${connected} yhdistetty onnistuneesti.`)
+    } else if (error === 'oauth_denied') {
+      setBanner('Yhdistäminen peruutettiin.')
+    } else if (error === 'oauth_failed') {
+      setBanner('Yhdistäminen epäonnistui. Tarkista callback-URI Linear/Notion-konsolissa.')
+    } else if (error === 'integration_not_configured') {
+      setBanner('Integraatiota ei ole vielä konfiguroitu palvelimella.')
+    }
+  }, [searchParams])
 
   useEffect(() => {
     fetch('/api/user/me')
@@ -39,9 +99,29 @@ export default function ProfilePage() {
 
     fetch('/api/integrations')
       .then((r) => r.json())
-      .then((data) => setConnections(data.connections ?? []))
+      .then((data) => {
+        setConnections(data.connections ?? [])
+        setOauthAvailable({
+          linear: data.capabilities?.linear?.oauth ?? false,
+          notion: data.capabilities?.notion?.oauth ?? false,
+        })
+      })
       .catch(console.error)
   }, [])
+
+  async function refreshConnections() {
+    const data = await fetch('/api/integrations').then((r) => r.json())
+    setConnections(data.connections ?? [])
+    setOauthAvailable({
+      linear: data.capabilities?.linear?.oauth ?? false,
+      notion: data.capabilities?.notion?.oauth ?? false,
+    })
+  }
+
+  function openApiKeyModal(provider: ApiKeyProvider) {
+    setApiKeyValue('')
+    setApiKeyModal(provider)
+  }
 
   function isConnected(provider: string) {
     return connections.some((c) => c.provider === provider && c.status === 'active')
@@ -56,7 +136,61 @@ export default function ProfilePage() {
   }
 
   async function handleConnect(providerId: string) {
-    window.location.href = `/api/integrations/${providerId}/connect`
+    if (
+      (providerId === 'linear' || providerId === 'notion') &&
+      !oauthAvailable[providerId]
+    ) {
+      openApiKeyModal(providerId)
+      return
+    }
+
+    const res = await fetch(`/api/integrations/${providerId}/connect`, {
+      redirect: 'manual',
+    })
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.get('Location')
+      if (location) window.location.href = location
+      return
+    }
+    const data = await res.json().catch(() => ({}))
+    if (data.code === 'LINEAR_USE_API_KEY') {
+      openApiKeyModal('linear')
+      return
+    }
+    if (data.code === 'NOTION_USE_API_KEY') {
+      openApiKeyModal('notion')
+      return
+    }
+    if (data.code === 'INTEGRATION_NOT_CONFIGURED') {
+      setBanner(data.error)
+      return
+    }
+    setBanner(data.error ?? 'Yhdistäminen epäonnistui.')
+  }
+
+  async function handleApiKeyConnect() {
+    if (!apiKeyModal) return
+
+    setConnectingApiKey(true)
+    setBanner(null)
+    try {
+      const res = await fetch(`/api/integrations/${apiKeyModal}/api-key`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: apiKeyValue }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setBanner(data.error ?? 'API-avaimen yhdistäminen epäonnistui.')
+        return
+      }
+      setApiKeyModal(null)
+      setApiKeyValue('')
+      setBanner(API_KEY_MODAL[apiKeyModal].successMessage)
+      await refreshConnections()
+    } finally {
+      setConnectingApiKey(false)
+    }
   }
 
   async function handleSync(providerId: string) {
@@ -82,6 +216,11 @@ export default function ProfilePage() {
       </header>
 
       <main className="space-y-8 px-4 pb-12 pt-20">
+        {banner ? (
+          <div className="rounded-xl border border-outline-variant bg-surface-container-low px-4 py-3 text-sm text-on-surface">
+            {banner}
+          </div>
+        ) : null}
         {user && (
           <section className="flex flex-col items-center text-center">
             <div className="relative mb-4">
@@ -222,6 +361,62 @@ export default function ProfilePage() {
           router.push(routes[tab] ?? '/')
         }}
       />
+
+      {apiKeyModal ? (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <div className="w-full max-w-md rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-lg">
+            <h3 className="text-lg font-bold text-on-surface">
+              {API_KEY_MODAL[apiKeyModal].title}
+            </h3>
+            <p className="mt-2 text-sm text-on-surface-variant">
+              {API_KEY_MODAL[apiKeyModal].description}
+            </p>
+            <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-on-surface-variant">
+              <li>
+                Avaa{' '}
+                <a
+                  href={API_KEY_MODAL[apiKeyModal].linkHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary underline"
+                >
+                  {API_KEY_MODAL[apiKeyModal].linkLabel}
+                </a>
+              </li>
+              {API_KEY_MODAL[apiKeyModal].steps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+            <input
+              type="password"
+              value={apiKeyValue}
+              onChange={(e) => setApiKeyValue(e.target.value)}
+              placeholder={API_KEY_MODAL[apiKeyModal].placeholder}
+              className="mt-4 w-full rounded-lg border border-outline-variant px-3 py-2 text-sm"
+              autoComplete="off"
+            />
+            <div className="mt-4 flex gap-2">
+              <Button
+                className="flex-1"
+                onClick={handleApiKeyConnect}
+                disabled={connectingApiKey || !apiKeyValue.trim()}
+              >
+                {connectingApiKey ? 'Yhdistetään...' : 'Yhdistä'}
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setApiKeyModal(null)
+                  setApiKeyValue('')
+                }}
+              >
+                Peruuta
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

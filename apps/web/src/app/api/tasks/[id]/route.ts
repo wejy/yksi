@@ -4,8 +4,11 @@ import {
   getDecryptedToken,
   updateLinearIssueStatus,
   updateLinearIssuePriority,
+  resolveLinearStateId,
   toLinearPriority,
 } from '@yksi/integrations'
+import { eq, and } from 'drizzle-orm'
+import { getDb, integrationConnections } from '@yksi/db'
 import { z } from 'zod'
 
 const patchSchema = z.object({
@@ -57,17 +60,30 @@ export async function PATCH(
     })
 
     if (existing.source === 'linear' && existing.externalId) {
-      const { eq } = await import('drizzle-orm')
-      const { getDb, integrationConnections } = await import('@yksi/db')
       const db = getDb()
       const [conn] = await db
         .select()
         .from(integrationConnections)
-        .where(eq(integrationConnections.userId, session.user.id))
+        .where(
+          and(
+            eq(integrationConnections.userId, session.user.id),
+            eq(integrationConnections.provider, 'linear'),
+          ),
+        )
         .limit(1)
 
       if (conn) {
         const token = await getDecryptedToken(conn.id)
+        if (body.status) {
+          const stateId = await resolveLinearStateId(
+            token,
+            existing.externalId,
+            body.status,
+          )
+          if (stateId) {
+            await updateLinearIssueStatus(token, existing.externalId, stateId)
+          }
+        }
         if (body.priority) {
           await updateLinearIssuePriority(
             token,

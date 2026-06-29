@@ -1,4 +1,6 @@
 import { requireAuth, apiError, jsonResponse } from '@/lib/api-utils'
+import { isLinearOAuthConfigured } from '@yksi/integrations/linear'
+import { isNotionOAuthConfigured } from '@yksi/integrations/notion'
 import { eq } from 'drizzle-orm'
 import { getDb, integrationConnections } from '@yksi/db'
 
@@ -17,7 +19,19 @@ export async function GET() {
       .from(integrationConnections)
       .where(eq(integrationConnections.userId, session.user.id))
 
-    return jsonResponse({ connections })
+    return jsonResponse({
+      connections,
+      capabilities: {
+        linear: {
+          oauth: isLinearOAuthConfigured(),
+          apiKey: true,
+        },
+        notion: {
+          oauth: isNotionOAuthConfigured(),
+          apiKey: true,
+        },
+      },
+    })
   } catch (error) {
     return apiError(error)
   }

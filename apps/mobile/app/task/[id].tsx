@@ -10,22 +10,33 @@ export default function TaskDetailScreen() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [source, setSource] = useState('')
+  const [status, setStatus] = useState('open')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!id) return
-    apiFetch<{ title: string; description: string | null; source: string }>(
+    apiFetch<{ title: string; description: string | null; source: string; status: string }>(
       `/api/tasks/${id}`,
     )
       .then((data) => {
         setTitle(data.title)
         setDescription(data.description ?? '')
         setSource(data.source)
+        setStatus(data.status)
       })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [id])
+
+  async function toggleDone() {
+    const newStatus = status === 'done' ? 'open' : 'done'
+    await apiFetch(`/api/tasks/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: newStatus }),
+    })
+    setStatus(newStatus)
+  }
 
   async function handleSave() {
     setSaving(true)
@@ -69,6 +80,15 @@ export default function TaskDetailScreen() {
           multiline
         />
         <Text className="text-xs text-on-surface-variant">Lähde: {source}</Text>
+
+        <Pressable
+          onPress={toggleDone}
+          className={`mt-6 items-center rounded-full py-3 ${status === 'done' ? 'border border-outline-variant' : 'bg-primary'}`}
+        >
+          <Text className={`font-semibold ${status === 'done' ? 'text-on-surface' : 'text-on-primary'}`}>
+            {status === 'done' ? 'Merkitse avoimeksi' : 'Merkitse valmiiksi'}
+          </Text>
+        </Pressable>
       </ScrollView>
 
       <View className="border-t border-outline-variant bg-surface-container-lowest p-4">

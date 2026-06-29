@@ -1,13 +1,32 @@
 import { extractNotionTitle, type NotionPage, type NotionPropertyMapping } from '@yksi/core'
+import { YKSI_NOTION_OAUTH_CLIENT_ID } from '@yksi/core'
 
 export const NOTION_AUTH_URL = 'https://api.notion.com/v1/oauth/authorize'
 export const NOTION_TOKEN_URL = 'https://api.notion.com/v1/oauth/token'
 export const NOTION_API_URL = 'https://api.notion.com/v1'
 export const NOTION_VERSION = '2022-06-28'
 
+export function getNotionOAuthClientId(): string | undefined {
+  const fromEnv = process.env.NOTION_CLIENT_ID?.trim()
+  if (fromEnv) return fromEnv
+  if (YKSI_NOTION_OAUTH_CLIENT_ID.trim()) return YKSI_NOTION_OAUTH_CLIENT_ID.trim()
+  return undefined
+}
+
+export function isNotionOAuthConfigured(): boolean {
+  const clientId = getNotionOAuthClientId()
+  const clientSecret = process.env.NOTION_CLIENT_SECRET?.trim()
+  return !!(clientId && clientSecret)
+}
+
 export function getNotionAuthUrl(redirectUri: string, state: string): string {
+  const clientId = getNotionOAuthClientId()
+  if (!clientId) {
+    throw new Error('Notion OAuth client ID not configured')
+  }
+
   const params = new URLSearchParams({
-    client_id: process.env.NOTION_CLIENT_ID!,
+    client_id: clientId,
     redirect_uri: redirectUri,
     response_type: 'code',
     owner: 'user',
@@ -59,6 +78,13 @@ export async function searchNotionDatabases(accessToken: string) {
   if (!res.ok) throw new Error(`Notion search failed: ${res.status}`)
   const data = (await res.json()) as { results: { id: string; title: { plain_text: string }[] }[] }
   return data.results as { id: string; title: { plain_text: string }[] }[]
+}
+
+export async function validateNotionApiKey(token: string): Promise<boolean> {
+  const res = await fetch(`${NOTION_API_URL}/users/me`, {
+    headers: notionHeaders(token),
+  })
+  return res.ok
 }
 
 export async function queryNotionDatabase(
