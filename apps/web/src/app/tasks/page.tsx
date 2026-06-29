@@ -15,6 +15,7 @@ import {
   type IntressiFilterOption,
 } from '@yksi/ui'
 import { LocalizedBottomNav } from '@/components/localized-bottom-nav'
+import { TaskCreatedToast } from '@/components/task-created-toast'
 import { useI18n } from '@yksi/i18n/react'
 import {
   TASKS_LIST_PAGE_SIZE,
@@ -311,6 +312,7 @@ export default function TasksPage() {
       </main>
 
       <LocalizedBottomNav activeTab="tasks" />
+      <TaskCreatedToast />
     </div>
   )
 }

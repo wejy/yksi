@@ -25,12 +25,6 @@ export function DeadlineReminderFields({
     onReminderChange(deadline)
   }
 
-  function setSameAsDeadline() {
-    onReminderChange(deadline)
-  }
-
-  const sameAsDeadline = Boolean(deadline && reminder && deadline === reminder)
-
   return (
     <div className={className}>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -74,14 +68,6 @@ export function DeadlineReminderFields({
             >
               Kopioi deadlinesta
             </button>
-            <button
-              type="button"
-              onClick={setSameAsDeadline}
-              disabled={!deadline || sameAsDeadline}
-              className="text-xs text-primary underline hover:text-primary/80 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Sama kuin deadline
-            </button>
             {reminder ? (
               <button
                 type="button"
@@ -95,8 +81,7 @@ export function DeadlineReminderFields({
         </div>
       </div>
       <p className="mt-2 text-xs text-on-surface-variant">
-        Deadline ja hälytysaika voivat olla eri tai samat. Kopioi deadlinesta tai aseta sama aika
-        hälytykseen yhdellä napilla.
+        Deadline ja hälytysaika voivat olla eri tai samat.
       </p>
     </div>
   )

@@ -66,8 +66,6 @@ export function DeadlineReminderFields({
   onDeadlineChange,
   onReminderChange,
 }: DeadlineReminderFieldsProps) {
-  const sameAsDeadline = Boolean(deadline && reminder && deadline === reminder)
-
   return (
     <View>
       <DateTimeRow
@@ -86,16 +84,6 @@ export function DeadlineReminderFields({
         <Pressable onPress={() => deadline && onReminderChange(deadline)} disabled={!deadline}>
           <Text className={`text-xs text-primary underline ${!deadline ? 'opacity-40' : ''}`}>
             Kopioi deadlinesta
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => deadline && onReminderChange(deadline)}
-          disabled={!deadline || sameAsDeadline}
-        >
-          <Text
-            className={`text-xs text-primary underline ${!deadline || sameAsDeadline ? 'opacity-40' : ''}`}
-          >
-            Sama kuin deadline
           </Text>
         </Pressable>
       </View>

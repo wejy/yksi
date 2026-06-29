@@ -4,10 +4,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { TopAppBar, Button, Input, screenBottomPaddingClass } from '@yksi/ui'
 import type { TaskContentDocument } from '@yksi/core'
-import { emptyTaskContent, fromDatetimeLocalValue } from '@yksi/core'
+import { emptyTaskContent, fromDatetimeLocalValue, taskContentToPlainText } from '@yksi/core'
 import { TaskContentEditor } from '@/components/task-content-editor'
 import { DeadlineReminderFields } from '@/components/deadline-reminder-fields'
 import { IntressiField, type IntressiOption } from '@/components/intressi-field'
+import { setTaskCreatedToast } from '@/lib/task-created-toast'
 
 export default function NewTaskPage() {
   const router = useRouter()
@@ -33,7 +34,7 @@ export default function NewTaskPage() {
 
   async function handleCreate() {
     if (!title.trim()) {
-      setError('Otsikko on pakollinen')
+      setError('Tehtävä on pakollinen')
       return
     }
 
@@ -56,7 +57,9 @@ export default function NewTaskPage() {
         throw new Error(data.error ?? 'Tehtävän luonti epäonnistui')
       }
       const task = await res.json()
-      router.replace(`/task/${task.id}`)
+      const description = taskContentToPlainText(contentDocument, 120) || null
+      setTaskCreatedToast({ taskId: task.id, title: title.trim(), description })
+      router.replace('/tasks')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Tehtävän luonti epäonnistui')
       setSaving(false)
@@ -74,13 +77,28 @@ export default function NewTaskPage() {
       <main className="space-y-4 p-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-on-surface-variant">
-            Otsikko
+            Tehtävä
           </label>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Mitä pitää tehdä?"
             autoFocus
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-on-surface-variant">
+            Kuvaus
+          </label>
+          <p className="mb-2 text-xs text-on-surface-variant">
+            Kirjoita tekstiä tai käytä / valikkoa otsikoille, tehtäville, kuville ja listoille
+          </p>
+          <TaskContentEditor
+            value={contentDocument}
+            onChange={handleContentChange}
+            editable
+            className="min-h-[240px] overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest"
           />
         </div>
 
@@ -97,21 +115,6 @@ export default function NewTaskPage() {
           onDeadlineChange={setDeadline}
           onReminderChange={setReminder}
         />
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-on-surface-variant">
-            Sisältö
-          </label>
-          <p className="mb-2 text-xs text-on-surface-variant">
-            Käytä / valikkoa otsikoille, tehtäville, kuville ja listoille
-          </p>
-          <TaskContentEditor
-            value={contentDocument}
-            onChange={handleContentChange}
-            editable
-            className="min-h-[240px] overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest"
-          />
-        </div>
 
         {error ? <p className="text-sm text-error">{error}</p> : null}
       </main>

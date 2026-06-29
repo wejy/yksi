@@ -44,6 +44,10 @@ export const fi = {
     sortDesc: 'Laskeva',
     clearFilters: 'Tyhjennä suodattimet',
     allSources: 'Kaikki lähteet',
+    createdToast: 'Lisättiin tehtävä «{title}» kuvauksella «{description}».',
+    createdToastNoDescription: 'Lisättiin tehtävä «{title}».',
+    createdToastAction: 'Napauta avataksesi tehtävän ja muokataksesi sitä.',
+    createdToastDismiss: 'Sulje',
   },
   stream: {
     title: 'Virta',

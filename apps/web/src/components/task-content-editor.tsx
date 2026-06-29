@@ -5,6 +5,9 @@ import { useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/shadcn'
 import type { TaskContentDocument } from '@yksi/core'
 import { emptyTaskContent } from '@yksi/core'
+import { useI18n } from '@yksi/i18n/react'
+import type { Locale } from '@yksi/i18n'
+import { getBlockNoteDictionary } from '@/lib/blocknote-dictionary'
 import '@blocknote/core/fonts/inter.css'
 import '@blocknote/shadcn/style.css'
 
@@ -20,14 +23,16 @@ function TaskContentEditorInner({
   onChange,
   editable = true,
   className,
-}: TaskContentEditorProps) {
+  locale,
+}: TaskContentEditorProps & { locale: Locale }) {
+  const dictionary = useMemo(() => getBlockNoteDictionary(locale), [locale])
   const initialContent = useMemo(
     () => (value?.length ? value : emptyTaskContent()) as never,
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only initial mount
     [],
   )
 
-  const editor = useCreateBlockNote({ initialContent })
+  const editor = useCreateBlockNote({ initialContent, dictionary })
 
   useEffect(() => {
     return editor.onChange(() => {
@@ -43,6 +48,7 @@ function TaskContentEditorInner({
 }
 
 export function TaskContentEditor(props: TaskContentEditorProps) {
+  const { locale } = useI18n()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -57,7 +63,7 @@ export function TaskContentEditor(props: TaskContentEditorProps) {
     )
   }
 
-  return <TaskContentEditorInner {...props} />
+  return <TaskContentEditorInner key={locale} {...props} locale={locale} />
 }
 
 interface TaskContentViewerProps {
@@ -65,9 +71,15 @@ interface TaskContentViewerProps {
   className?: string
 }
 
-function TaskContentViewerInner({ value, className }: TaskContentViewerProps) {
+function TaskContentViewerInner({
+  value,
+  className,
+  locale,
+}: TaskContentViewerProps & { locale: Locale }) {
+  const dictionary = useMemo(() => getBlockNoteDictionary(locale), [locale])
   const editor = useCreateBlockNote({
     initialContent: (value?.length ? value : undefined) as never,
+    dictionary,
   })
 
   useEffect(() => {
@@ -83,6 +95,7 @@ function TaskContentViewerInner({ value, className }: TaskContentViewerProps) {
 }
 
 export function TaskContentViewer({ value, className }: TaskContentViewerProps) {
+  const { locale } = useI18n()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -91,7 +104,9 @@ export function TaskContentViewer({ value, className }: TaskContentViewerProps) 
 
   if (!value?.length) {
     return (
-      <p className="text-sm italic text-on-surface-variant">Ei kuvausta.</p>
+      <p className="text-sm italic text-on-surface-variant">
+        {locale === 'en' ? 'No description.' : 'Ei kuvausta.'}
+      </p>
     )
   }
 
@@ -103,5 +118,5 @@ export function TaskContentViewer({ value, className }: TaskContentViewerProps) 
     )
   }
 
-  return <TaskContentViewerInner value={value} className={className} />
+  return <TaskContentViewerInner key={locale} value={value} className={className} locale={locale} />
 }

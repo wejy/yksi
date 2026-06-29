@@ -46,6 +46,8 @@ export const en: Messages = {
     sortDesc: 'Descending',
     clearFilters: 'Clear filters',
     allSources: 'All sources',
+    createdToast: 'Added task «{title}» with description «{description}».',
+    createdToastNoDescription: 'Added task «{title}».',
   },
   stream: {
     title: 'Stream',
