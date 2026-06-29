@@ -21,14 +21,14 @@ export const INTEGRATION_CATALOG: IntegrationCatalogItem[] = [
     id: 'notion',
     name: 'Notion',
     icon: 'description',
-    description: 'Synkronoi tehtävälistat tietokannoista.',
+    description: 'Synkronoi tehtävälistat tietokannoista Yhteen.',
     availability: 'available',
   },
   {
     id: 'google_calendar',
     name: 'Google Calendar',
     icon: 'calendar_month',
-    description: 'Synkronoi tapaamiset automaattisesti.',
+    description: 'Synkronoi tapaamiset automaattisesti Yhteen. Aseta muistutuksia.',
     availability: 'available',
   },
   {

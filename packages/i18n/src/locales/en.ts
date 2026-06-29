@@ -65,6 +65,7 @@ export const en: Messages = {
     comingSoon: 'Coming soon',
     syncNow: 'Sync now',
     syncing: 'Syncing…',
+    notSyncedYet: 'Not synced yet',
     signOut: 'Sign out',
     version: 'Version 1.0.0 (MVP)',
     tierFree: 'Free',

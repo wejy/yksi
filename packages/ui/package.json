@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./tokens": "./src/tokens/index.ts",
-    "./globals.css": "./src/globals.css"
+    "./globals.css": "./src/globals.css",
+    "./assets/integrations/*": "./src/assets/integrations/*"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

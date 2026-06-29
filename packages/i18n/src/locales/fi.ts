@@ -63,6 +63,7 @@ export const fi = {
     comingSoon: 'Tulossa',
     syncNow: 'Synkronoi nyt',
     syncing: 'Synkronoidaan…',
+    notSyncedYet: 'Ei vielä synkattu',
     signOut: 'Kirjaudu ulos',
     version: 'Versio 1.0.0 (MVP)',
     tierFree: 'Ilmainen',

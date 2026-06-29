@@ -16,6 +16,14 @@ export {
   IntressiFilter,
   type IntressiFilterOption,
 } from './components/intressi-filter'
+export { IntegrationLogo } from './components/integration-logo'
+export {
+  INTEGRATION_LOGO_IDS,
+  type IntegrationLogoId,
+  GoogleCalendarLogo,
+  LinearLogo,
+  NotionLogo,
+} from './assets/integrations'
 export { IntressiBadge, type IntressiBadgeProps, type TaskIntressiDisplay } from './components/intressi-badge'
 export { TaskMonthCalendar } from './components/task-month-calendar'
 export { TaskWeekCalendar } from './components/task-week-calendar'

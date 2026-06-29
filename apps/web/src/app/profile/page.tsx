@@ -1,17 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Button, bottomNavPaddingClass, YksiLogoMark } from '@yksi/ui'
-import { INTEGRATION_CATALOG, formatSyncResult, formatSyncError, getProviderLabel } from '@yksi/core'
+import { Button, bottomNavPaddingClass, YksiLogoMark, IntegrationLogo } from '@yksi/ui'
+import { INTEGRATION_CATALOG, formatSyncResult, formatSyncError, formatLastSyncedBadge, getProviderLabel } from '@yksi/core'
 import { SyncOverlay } from '@/components/sync-overlay'
 import { LocalizedBottomNav } from '@/components/localized-bottom-nav'
 import { useI18n } from '@yksi/i18n/react'
+import type { Locale } from '@yksi/i18n'
 
 interface Connection {
   id: string
   provider: string
   status: string
+  lastSyncedAt: string | null
 }
 
 interface User {
@@ -69,8 +71,26 @@ const API_KEY_MODAL: Record<
 
 // Based on ui/profiili_ja_integraatiot/code.html
 export default function ProfilePage() {
+  return (
+    <Suspense fallback={<ProfilePageFallback />}>
+      <ProfilePageContent />
+    </Suspense>
+  )
+}
+
+function ProfilePageFallback() {
+  return (
+    <div className="flex min-h-screen flex-col bg-surface">
+      <div className="mx-auto w-full max-w-lg flex-1 px-4 pb-24 pt-6">
+        <div className="h-8 w-32 animate-pulse rounded bg-surface-container" />
+      </div>
+    </div>
+  )
+}
+
+function ProfilePageContent() {
   const router = useRouter()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const searchParams = useSearchParams()
   const [user, setUser] = useState<User | null>(null)
   const [connections, setConnections] = useState<Connection[]>([])
@@ -165,6 +185,10 @@ export default function ProfilePage() {
 
   function isConnected(provider: string) {
     return connections.some((c) => c.provider === provider && c.status === 'active')
+  }
+
+  function getConnection(provider: string) {
+    return connections.find((c) => c.provider === provider && c.status === 'active')
   }
 
   async function handleUpgrade() {
@@ -337,6 +361,11 @@ export default function ProfilePage() {
             {INTEGRATION_CATALOG.map((provider) => {
               const connected = isConnected(provider.id)
               const isAvailable = provider.availability === 'available'
+              const connection = getConnection(provider.id)
+              const lastSyncedLabel = formatLastSyncedBadge(
+                connection?.lastSyncedAt,
+                locale as Locale,
+              )
 
               return (
                 <div
@@ -344,13 +373,12 @@ export default function ProfilePage() {
                   className={`flex min-h-44 flex-col justify-between rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm transition-shadow hover:shadow-md ${!isAvailable ? 'opacity-80' : ''}`}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="rounded-lg border border-outline-variant bg-surface p-2">
-                      <span
-                        className={`material-symbols-outlined ${connected ? 'text-primary' : 'text-on-surface-variant'}`}
-                        style={connected ? { fontVariationSettings: "'FILL' 1" } : undefined}
-                      >
-                        {provider.icon}
-                      </span>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-outline-variant bg-surface p-2">
+                      <IntegrationLogo
+                        provider={provider.id}
+                        size={22}
+                        fallbackIcon={provider.icon}
+                      />
                     </div>
                     {!isAvailable ? (
                       <span className="rounded-full bg-surface-container px-3 py-1 text-xs font-medium text-on-surface-variant">
@@ -374,14 +402,29 @@ export default function ProfilePage() {
                     <p className="font-bold">{provider.name}</p>
                     <p className="text-sm text-on-surface-variant">{provider.description}</p>
                     {connected && isAvailable ? (
-                      <button
-                        type="button"
-                        onClick={() => handleSync(provider.id)}
-                        disabled={syncingProvider === provider.id}
-                        className="mt-3 w-full rounded-full border border-primary bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
-                      >
-                        {syncingProvider === provider.id ? t('profile.syncing') : t('profile.syncNow')}
-                      </button>
+                      <div className="mt-3 space-y-2">
+                        <button
+                          type="button"
+                          onClick={() => handleSync(provider.id)}
+                          disabled={syncingProvider === provider.id}
+                          className="w-full rounded-full border border-primary bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
+                        >
+                          {syncingProvider === provider.id ? t('profile.syncing') : t('profile.syncNow')}
+                        </button>
+                        {lastSyncedLabel ? (
+                          <p className="text-center">
+                            <span className="inline-flex rounded-full bg-surface-container px-2 py-0.5 text-[10px] font-medium text-on-surface-variant">
+                              {lastSyncedLabel}
+                            </span>
+                          </p>
+                        ) : (
+                          <p className="text-center">
+                            <span className="inline-flex rounded-full bg-surface-container px-2 py-0.5 text-[10px] font-medium text-on-surface-variant">
+                              {t('profile.notSyncedYet')}
+                            </span>
+                          </p>
+                        )}
+                      </div>
                     ) : null}
                   </div>
                 </div>
