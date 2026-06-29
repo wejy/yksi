@@ -48,6 +48,8 @@ export const en: Messages = {
     allSources: 'All sources',
     createdToast: 'Added task «{title}» with description «{description}».',
     createdToastNoDescription: 'Added task «{title}».',
+    createdToastAction: 'Tap to open and edit the task.',
+    createdToastDismiss: 'Close',
   },
   stream: {
     title: 'Stream',
