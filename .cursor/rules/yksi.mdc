@@ -1,0 +1,45 @@
+---
+description: Yksi-projektin tekniset konventiot ja rajoitukset
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Yksi — projektisäännöt
+
+## Tuote
+
+Yksi on unified tehtävienhallinta-sovellus. MVP: Linear + Notion + Google Calendar.
+
+## Pakolliset säännöt
+
+1. **Älä muuta `ui/`-kansion HTML-mockupeja** — ne ovat design-referenssiä
+2. **Brändi: Yksi** (ei "Unified") kaikessa käyttöliittymässä ja uudessa koodissa
+3. **Domain-termit**: käytä "Yhteispinta" (FI) / `yhteispinta` / `commonGrounds` (koodi)
+4. **Minimoi scope** — toteuta vain pyydetty, älä refaktoroi sivutuotteena
+5. **Monorepo-importit**: `@yksi/db`, `@yksi/core`, `@yksi/ui`, `@yksi/integrations`
+
+## Tiedostosijainnit
+
+- Skeema ja migraatiot → `packages/db/`
+- Domain-tyypit ja normalisointi → `packages/core/`
+- Integraatioadapterit → `packages/integrations/`
+- Jaetut UI-komponentit → `packages/ui/`
+- Next.js API → `apps/web/app/api/`
+- Expo-näkymät → `apps/mobile/app/`
+
+## UI-toteutus
+
+- Web: shadcn/ui + Radix + Tailwind (tokenit `packages/ui`)
+- Mobile: NativeWind + samat design tokenit
+- Jokainen näkymä viittaa mockup-tiedostoon kommentissa: `// Based on ui/teht_v_lista/code.html`
+
+## Turvallisuus
+
+- Integraatiotokenit: AES-256-salaus, ei logata
+- API-reitit: autentikointi pakollinen (Better Auth session)
+- Freemium-rajat: tarkista server-puolella
+
+## Dokumentaatio
+
+Ennen toteutusta lue vastaava `docs/*.md`. AGENTS.md on ensisijainen ohje.

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-fixed-dim": "#ffb695",
+            "surface-tint": "#4d44e3",
+            "on-secondary-fixed": "#191c1e",
+            "surface-container-high": "#dce9ff",
+            "surface-variant": "#d3e4fe",
+            "error": "#ba1a1a",
+            "secondary-fixed": "#e0e3e5",
+            "on-tertiary-container": "#ffd2be",
+            "secondary-fixed-dim": "#c4c7c9",
+            "on-surface": "#0b1c30",
+            "tertiary": "#7e3000",
+            "on-surface-variant": "#464555",
+            "on-error-container": "#93000a",
+            "secondary": "#5c5f61",
+            "primary-container": "#4f46e5",
+            "tertiary-container": "#a44100",
+            "on-background": "#0b1c30",
+            "primary-fixed": "#e2dfff",
+            "surface-bright": "#f8f9ff",
+            "on-secondary": "#ffffff",
+            "outline": "#777587",
+            "tertiary-fixed": "#ffdbcc",
+            "primary-fixed-dim": "#c3c0ff",
+            "surface-container-highest": "#d3e4fe",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed-variant": "#444749",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "on-tertiary": "#ffffff",
+            "on-error": "#ffffff",
+            "on-primary": "#ffffff",
+            "secondary-container": "#e0e3e5",
+            "on-tertiary-fixed": "#351000",
+            "on-primary-fixed": "#0f0069",
+            "inverse-primary": "#c3c0ff",
+            "inverse-on-surface": "#eaf1ff",
+            "surface-dim": "#cbdbf5",
+            "primary": "#3525cd",
+            "on-primary-container": "#dad7ff",
+            "on-secondary-container": "#626567",
+            "on-primary-fixed-variant": "#3323cc",
+            "surface-container-low": "#eff4ff",
+            "surface": "#f8f9ff",
+            "inverse-surface": "#213145",
+            "outline-variant": "#c7c4d8",
+            "surface-container-lowest": "#ffffff",
+            "background": "#f8f9ff",
+            "surface-container": "#e5eeff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter": "16px",
+            "stack-sm": "8px",
+            "stack-md": "16px",
+            "stack-lg": "32px",
+            "base": "4px",
+            "container-padding": "24px"
+          },
+          "fontFamily": {
+            "h3": ["Inter"],
+            "body-sm": ["Inter"],
+            "body-base": ["Inter"],
+            "h1-mobile": ["Inter"],
+            "h1": ["Inter"],
+            "body-lg": ["Inter"],
+            "label-sm": ["Inter"],
+            "h2": ["Inter"],
+            "label-md": ["Inter"]
+          },
+          "fontSize": {
+            "h3": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+            "h1-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "700"}],
+            "h1": ["36px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+            "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+            "h2": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen pb-20">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface dark:bg-surface-dim border-b border-secondary-container dark:border-outline-variant h-16 flex items-center justify-between px-gutter">
+<div class="flex items-center gap-3">
+<img alt="Yksi Logo" class="h-8 w-8 object-contain" src="https://lh3.googleusercontent.com/aida/AP1WRLuPU2fvNoCpeYTT8K-kwkJ6Zi1QuWmfuClhwTzPnm6Abovy2mcVfC7eaZBC9gTLQKMZlUZyr6ztw1KloR66XjpSV0Cv3eFOLNVHQwLPZDIRYNHpBATpojep7qg5idhclCMWBXoWBpJ1S0FbgF8veDpfv1FPK1Sprm7o3mo7DX0F3INzBGsv-cb_vl4NEirrZGTyDzFpUeuTJzNG300HMf782cZm35kvsxQRtHMMdU7sOBpYUiMo3UlbZw"/>
+<h1 class="font-h3 text-h3-mobile md:text-h3 font-bold text-primary dark:text-primary-fixed-dim">Profiili</h1>
+</div>
+<button class="active:scale-95 duration-100 p-2 rounded-full hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+</header>
+<main class="pt-20 px-gutter max-w-4xl mx-auto">
+<!-- Profile Header -->
+<section class="mb-stack-lg flex flex-col items-center text-center">
+<div class="relative mb-stack-md">
+<div class="w-24 h-24 rounded-full border-4 border-surface-container-lowest overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A professional, high-quality headshot of a person with a friendly expression. They are set against a minimalist, clean studio background with soft natural lighting that complements a modern productivity app aesthetic. The color palette is neutral with soft whites and grays, emphasizing clarity and focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ9-Yy7Z0VDFb2ygvjeIeTlWwKkTKDcBnBfsBoJIarQ0eCZHOHkgtax1oETsg60f78dIgTQSB9p5xmiY0uBuf6sUSNzzWmYm63JkAwzYW2YtsZuo2CFN9CVD0STecL4S0xI-dTDY90fCTRYXXltZCpoV5103I2Vz3QWttKENlnVufujpxvY_eMlz-9cDY36TFcyC0kiL3wVOAWVjtKTK9w7sQQC6XQz2KAnj1BnDq9xY1JR1pYJBgzmWYozDJjIpHlbm-EgX3Odtw"/>
+</div>
+<button class="absolute bottom-0 right-0 bg-primary text-on-primary p-1.5 rounded-full shadow-lg border-2 border-surface">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+<h2 class="font-h2 text-h2 text-on-surface">Antti Käyttäjä</h2>
+<p class="font-body-base text-on-surface-variant">antti.kayttaja@yksi.io</p>
+</section>
+<!-- Account Settings -->
+<section class="mb-stack-lg">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-stack-md px-2">Tilin Asetukset</h3>
+<div class="space-y-1 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<button class="w-full flex items-center justify-between p-4 hover:bg-surface-container-low transition-colors text-left group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">person</span>
+<span class="font-body-base font-medium">Henkilötiedot</span>
+</div>
+<span class="material-symbols-outlined text-outline transition-transform group-hover:translate-x-1">chevron_right</span>
+</button>
+<div class="h-px bg-outline-variant mx-4"></div>
+<button class="w-full flex items-center justify-between p-4 hover:bg-surface-container-low transition-colors text-left group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">notifications_active</span>
+<span class="font-body-base font-medium">Ilmoitukset</span>
+</div>
+<span class="material-symbols-outlined text-outline transition-transform group-hover:translate-x-1">chevron_right</span>
+</button>
+<div class="h-px bg-outline-variant mx-4"></div>
+<button class="w-full flex items-center justify-between p-4 hover:bg-surface-container-low transition-colors text-left group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">palette</span>
+<span class="font-body-base font-medium">Teema</span>
+</div>
+<span class="material-symbols-outlined text-outline transition-transform group-hover:translate-x-1">chevron_right</span>
+</button>
+</div>
+</section>
+<!-- Integrations -->
+<section class="mb-stack-lg">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-stack-md px-2">Integraatiot</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-md">
+<!-- Google Calendar -->
+<div class="bg-surface-container-lowest border border-outline-variant p-stack-md rounded-xl shadow-sm flex flex-col justify-between h-40 hover:shadow-md transition-shadow">
+<div class="flex items-start justify-between">
+<div class="bg-surface p-2 rounded-lg border border-outline-variant">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
+</div>
+<span class="bg-surface-container-high text-primary font-label-sm text-label-sm px-2 py-1 rounded-full border border-primary-container">Yhdistetty</span>
+</div>
+<div>
+<p class="font-body-base font-bold">Google Calendar</p>
+<p class="font-body-sm text-on-surface-variant">Synkronoi tapaamiset automaattisesti.</p>
+</div>
+</div>
+<!-- Slack -->
+<div class="bg-surface-container-lowest border border-outline-variant p-stack-md rounded-xl shadow-sm flex flex-col justify-between h-40 hover:shadow-md transition-shadow">
+<div class="flex items-start justify-between">
+<div class="bg-surface p-2 rounded-lg border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant">forum</span>
+</div>
+<button class="bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-3 py-1 rounded-full hover:bg-outline-variant transition-colors">Yhdistä</button>
+</div>
+<div>
+<p class="font-body-base font-bold">Slack</p>
+<p class="font-body-sm text-on-surface-variant">Saa ilmoitukset suoraan kanaville.</p>
+</div>
+</div>
+<!-- Microsoft Outlook -->
+<div class="bg-surface-container-lowest border border-outline-variant p-stack-md rounded-xl shadow-sm flex flex-col justify-between h-40 hover:shadow-md transition-shadow">
+<div class="flex items-start justify-between">
+<div class="bg-surface p-2 rounded-lg border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant">mail</span>
+</div>
+<button class="bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-3 py-1 rounded-full hover:bg-outline-variant transition-colors">Yhdistä</button>
+</div>
+<div>
+<p class="font-body-base font-bold">Microsoft Outlook</p>
+<p class="font-body-sm text-on-surface-variant">Hallitse sähköposteja ja kalenteria.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Logout -->
+<section class="mt-stack-lg mb-12">
+<button class="w-full bg-error-container text-on-error-container font-h3 text-h3-mobile py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-error hover:text-on-error transition-all active:scale-95">
+<span class="material-symbols-outlined">logout</span>
+        Kirjaudu ulos
+      </button>
+<p class="text-center mt-stack-md font-body-sm text-outline">Versio 2.4.1 (Build 890)</p>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface dark:bg-surface-dim border-t border-secondary-container dark:border-outline-variant h-16 px-4 pb-safe flex justify-around items-center">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors active:scale-90 duration-150 flex-1 h-full" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm text-label-sm">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors active:scale-90 duration-150 flex-1 h-full" href="#">
+<span class="material-symbols-outlined">checklist</span>
+<span class="font-label-sm text-label-sm">Tasks</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors active:scale-90 duration-150 flex-1 h-full" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-label-sm text-label-sm">Calendar</span>
+</a>
+<!-- Active State: Profile -->
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim font-bold active:scale-90 duration-150 flex-1 h-full" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+<script>
+    // Subtle interaction script
+    document.querySelectorAll('.active\\:scale-95').forEach(button => {
+      button.addEventListener('mousedown', () => {
+        button.style.transform = 'scale(0.95)';
+      });
+      button.addEventListener('mouseup', () => {
+        button.style.transform = 'scale(1)';
+      });
+      button.addEventListener('mouseleave', () => {
+        button.style.transform = 'scale(1)';
+      });
+    });
+  </script>
+</body></html>

@@ -1,0 +1,42 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build
+dist
+.next
+.turbo
+out
+build
+*.tsbuildinfo
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Expo
+apps/mobile/.expo
+apps/mobile/dist
+apps/mobile/web-build
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+coverage
+
+# Drizzle
+packages/db/drizzle/meta
+
+# Misc
+*.log
+.vercel

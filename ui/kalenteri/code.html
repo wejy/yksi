@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#f8f9ff",
+                    "primary": "#3525cd",
+                    "on-error": "#ffffff",
+                    "surface-tint": "#4d44e3",
+                    "tertiary": "#7e3000",
+                    "on-tertiary-fixed": "#351000",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "tertiary-container": "#a44100",
+                    "surface-container-highest": "#d3e4fe",
+                    "inverse-primary": "#c3c0ff",
+                    "on-error-container": "#93000a",
+                    "on-surface-variant": "#464555",
+                    "primary-fixed-dim": "#c3c0ff",
+                    "surface-variant": "#d3e4fe",
+                    "error-container": "#ffdad6",
+                    "inverse-surface": "#213145",
+                    "on-surface": "#0b1c30",
+                    "on-secondary-container": "#626567",
+                    "tertiary-fixed-dim": "#ffb695",
+                    "on-primary-container": "#dad7ff",
+                    "on-tertiary-fixed-variant": "#7b2f00",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#ffdbcc",
+                    "primary-container": "#4f46e5",
+                    "secondary-fixed": "#e0e3e5",
+                    "surface-container-high": "#dce9ff",
+                    "on-primary-fixed-variant": "#3323cc",
+                    "secondary": "#5c5f61",
+                    "on-secondary-fixed": "#191c1e",
+                    "inverse-on-surface": "#eaf1ff",
+                    "outline-variant": "#c7c4d8",
+                    "surface-container": "#e5eeff",
+                    "on-tertiary-container": "#ffd2be",
+                    "secondary-fixed-dim": "#c4c7c9",
+                    "background": "#f8f9ff",
+                    "secondary-container": "#e0e3e5",
+                    "on-primary-fixed": "#0f0069",
+                    "primary-fixed": "#e2dfff",
+                    "error": "#ba1a1a",
+                    "surface-dim": "#cbdbf5",
+                    "surface-container-low": "#eff4ff",
+                    "on-secondary-fixed-variant": "#444749",
+                    "on-background": "#0b1c30",
+                    "outline": "#777587",
+                    "on-tertiary": "#ffffff",
+                    "surface": "#f8f9ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "16px",
+                    "base": "4px",
+                    "stack-lg": "32px",
+                    "stack-md": "16px",
+                    "stack-sm": "8px",
+                    "container-padding": "24px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Inter"],
+                    "h1-mobile": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "h1": ["Inter"],
+                    "h2": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "h3": ["Inter"],
+                    "body-base": ["Inter"],
+                    "label-md": ["Inter"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "h1-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "h1": ["36px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "h2": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "h3": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-base": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-20">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface dark:bg-surface-dim border-b border-secondary-container dark:border-outline-variant flex items-center justify-between px-gutter w-full h-16">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a person with a friendly expression, set against a clean, minimalist studio background with soft lavender and blue lighting. The style is modern, professional, and consistent with a high-end productivity application aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7vRYDs3QRk9ec9pMgAMTEVjLtAQsnVJwO0kdWcEMKrAz4XfWJgAcuMCgPJZqsf30SrGMzE7dcY-HCi6hpFm5bX_UPbLbmRLKXO_vP5wDKZK0wEJ_48DMic5bgxr8rgYir7gRPKF0f7tjOt24XjjODOlbBclobJsdpamF7xntIKFWN4qddnGl07BMxXaFpt6ybZFVdfOBrE3BIYyIaQc0u6MNy6W9Ilcp4Jytz5r6owxWdrS4PESLEt6vLM-fYm-zl8JsyIe_XzBE"/>
+</div>
+<h1 class="font-h3 text-h3-mobile md:text-h3 font-bold text-primary dark:text-primary-fixed-dim">Unified</h1>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors active:scale-95 duration-100">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<main class="pt-20 px-gutter max-w-2xl mx-auto">
+<!-- Month Selector -->
+<div class="flex items-center justify-between mb-stack-lg">
+<div>
+<h2 class="font-h2 text-h2 text-on-surface">Lokakuu 2023</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">4 tehtävää tänään</p>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors active:scale-95">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="p-2 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors active:scale-95">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Monthly Calendar Grid (Shadcn style) -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 mb-stack-lg shadow-sm">
+<div class="calendar-grid text-center mb-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant py-2">MA</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant py-2">TI</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant py-2">KE</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant py-2">TO</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant py-2">PE</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant py-2">LA</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant py-2">SU</span>
+</div>
+<div class="calendar-grid gap-y-1">
+<!-- Row 1 -->
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg text-on-surface-variant opacity-40 font-body-sm text-body-sm">25</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg text-on-surface-variant opacity-40 font-body-sm text-body-sm">26</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg text-on-surface-variant opacity-40 font-body-sm text-body-sm">27</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg text-on-surface-variant opacity-40 font-body-sm text-body-sm">28</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg text-on-surface-variant opacity-40 font-body-sm text-body-sm">29</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg text-on-surface-variant opacity-40 font-body-sm text-body-sm">30</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm relative">
+                    1
+                    <span class="absolute bottom-1.5 w-1 h-1 bg-primary rounded-full"></span>
+</button>
+<!-- Row 2 -->
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">2</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">3</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm relative">
+                    4
+                    <span class="absolute bottom-1.5 w-1 h-1 bg-primary rounded-full"></span>
+</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">5</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">6</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">7</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">8</button>
+<!-- Row 3 -->
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm relative">
+                    9
+                    <span class="absolute bottom-1.5 w-1 h-1 bg-primary rounded-full"></span>
+</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg bg-primary text-on-primary font-bold font-body-sm text-body-sm shadow-md shadow-primary/20 scale-110 z-10 relative">
+                    10
+                    <span class="absolute bottom-1.5 w-1 h-1 bg-white rounded-full"></span>
+</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">11</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">12</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">13</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm relative">
+                    14
+                    <span class="absolute bottom-1.5 w-1 h-1 bg-primary rounded-full"></span>
+</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">15</button>
+<!-- Row 4 -->
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">16</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">17</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm relative">
+                    18
+                    <span class="absolute bottom-1.5 w-1 h-1 bg-primary rounded-full"></span>
+</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">19</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">20</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">21</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">22</button>
+<!-- Row 5 -->
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">23</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">24</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm relative">
+                    25
+                    <span class="absolute bottom-1.5 w-1 h-1 bg-primary rounded-full"></span>
+</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">26</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">27</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">28</button>
+<button class="aspect-square flex flex-col items-center justify-center rounded-lg hover:bg-surface-container-low transition-colors font-body-sm text-body-sm">29</button>
+</div>
+</div>
+<!-- Daily Tasks -->
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="font-h3 text-h3 text-on-surface">Tiistai, 10. Lokakuuta</h3>
+<button class="text-primary font-label-md text-label-md flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                    Lisää uusi
+                </button>
+</div>
+<div class="space-y-3">
+<!-- Task Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl flex gap-4 group hover:shadow-md transition-all duration-200 cursor-pointer">
+<div class="w-1.5 h-auto bg-primary rounded-full"></div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<h4 class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Tuotestrategian katselmus</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">09:00 - 10:30</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Keskustellaan Q4 tavoitteista ja prioriteeteista tiimin kanssa.</p>
+<div class="mt-3 flex items-center gap-2">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-slate-200">
+<img class="w-full h-full object-cover" data-alt="Avatar of a male team member in a minimalist style, soft office lighting, primary color accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDePdvx6kI1W-iuZUL5Pvf0xmNGqIWxYpkAfyDJZRiYEbnhchkefPIBMny4oJUH0UdPXkPn7CtIOuDr1qmCO9Dbj8n9hkMQ6xZPR0fdxSnCPPA7U7IyNnwTrgW-VLDg64MIpDs4LihTFadk2KgGbp1YIptBlc8_hupJzGOanOMYg6KdP3lnkqs4DvsQnIE35jqITz3u3e8cwEaPCQJChz48OqVhDJI6hkUp_92_9u5DJklMOa1dRrHofG2ZoAX5K6R4qgsJX6FQoik"/>
+</div>
+<div class="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-slate-200">
+<img class="w-full h-full object-cover" data-alt="Avatar of a female team member in a minimalist style, soft office lighting, primary color accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVoe9FP0KWGj9KGRR0iN9XazRWaci3rkJucVTZS-YpX4Hyx4C9V6hE__3Y1uSEhHxANM_aVcXaJiIsjU8M56uTYi3wfJbb0T8bEdtw-psrAV-0oss_T0pc-fI1bL38YAoYPFIPAWMBBEMxruRwhc98jtrcV9TG7TB9rW9uABbAghAmQhsm9PLswdaI0AZ1k8r0JipP65Dw_5mo89eAWml9xIH0sCP_wnPbfF1fFdtk4LmkZATMwlwQYKUTjn8jE6YP5KWvdCpADvA"/>
+</div>
+</div>
+<span class="text-label-sm text-on-surface-variant">+2 muuta</span>
+</div>
+</div>
+</div>
+<!-- Task Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl flex gap-4 group hover:shadow-md transition-all duration-200 cursor-pointer">
+<div class="w-1.5 h-auto bg-tertiary-container rounded-full"></div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<h4 class="font-label-md text-label-md text-on-surface group-hover:text-tertiary transition-colors">Asiakaspalaute-analyysi</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">13:00 - 14:00</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Viimeisimmän käyttäjätestauksen tulosten läpikäynti.</p>
+</div>
+</div>
+<!-- Task Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl flex gap-4 group hover:shadow-md transition-all duration-200 cursor-pointer">
+<div class="w-1.5 h-auto bg-secondary rounded-full"></div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<h4 class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Salitreeni</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">17:00 - 18:30</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Jalkapäivä ja kevyt cardio.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface dark:bg-surface-dim border-t border-secondary-container dark:border-outline-variant flex justify-around items-center w-full h-16 px-4 pb-safe">
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors active:scale-90 duration-150">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-sm text-label-sm">Dashboard</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors active:scale-90 duration-150">
+<span class="material-symbols-outlined" data-icon="checklist">checklist</span>
+<span class="font-label-sm text-label-sm">Tasks</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim font-bold hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors active:scale-90 duration-150">
+<span class="material-symbols-outlined" data-icon="calendar_today" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<span class="font-label-sm text-label-sm">Calendar</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors active:scale-90 duration-150">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</button>
+</nav>
+<script>
+        // Simple interactive simulation
+        document.querySelectorAll('.calendar-grid button').forEach(button => {
+            button.addEventListener('click', function() {
+                if (!this.classList.contains('opacity-40')) {
+                    document.querySelectorAll('.calendar-grid button').forEach(btn => {
+                        btn.classList.remove('bg-primary', 'text-on-primary', 'font-bold', 'shadow-md', 'shadow-primary/20', 'scale-110', 'z-10');
+                        if (!btn.classList.contains('opacity-40')) {
+                           btn.classList.add('hover:bg-surface-container-low');
+                        }
+                    });
+                    
+                    this.classList.add('bg-primary', 'text-on-primary', 'font-bold', 'shadow-md', 'shadow-primary/20', 'scale-110', 'z-10');
+                    this.classList.remove('hover:bg-surface-container-low');
+
+                    // Visual feedback for dot color when selected
+                    const dot = this.querySelector('span.rounded-full');
+                    if (dot) {
+                        dot.classList.remove('bg-primary');
+                        dot.classList.add('bg-white');
+                    }
+                }
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Yksi",
+    "slug": "yksi",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "yksi",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#3525cd"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.yksi.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#3525cd"
+      },
+      "package": "app.yksi.mobile"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#3525cd"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

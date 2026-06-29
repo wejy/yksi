@@ -1,0 +1,25 @@
+{
+  "name": "yksi",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=@yksi/web",
+    "dev:mobile": "turbo dev --filter=@yksi/mobile",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "db:push": "pnpm --filter @yksi/db db:push",
+    "db:migrate": "pnpm --filter @yksi/db db:migrate",
+    "db:generate": "pnpm --filter @yksi/db db:generate",
+    "db:studio": "pnpm --filter @yksi/db db:studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20"
+  }
+}

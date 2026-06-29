@@ -1,0 +1,34 @@
+{
+  "name": "@yksi/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@yksi/core": "workspace:*",
+    "@yksi/db": "workspace:*",
+    "@yksi/integrations": "workspace:*",
+    "@yksi/ui": "workspace:*",
+    "better-auth": "^1.2.12",
+    "drizzle-orm": "^0.44.2",
+    "next": "^15.3.5",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "stripe": "^17.7.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/node": "^22.15.32",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@yksi/config": "workspace:*",
+    "tailwindcss": "^4.1.11",
+    "typescript": "^5.8.3"
+  }
+}
