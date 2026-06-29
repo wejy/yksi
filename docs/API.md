@@ -1,6 +1,6 @@
 # API-referenssi
 
-Base URL: `https://yksi.app/api` (tuotanto) / `http://localhost:3000/api` (dev)
+Base URL: `https://yksi.app/api` (tuotanto) / `http://localhost:3069/api` (dev)
 
 Autentikointi: Better Auth session cookie (web) tai `Authorization: Bearer <token>` (mobile).
 

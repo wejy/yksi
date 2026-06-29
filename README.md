@@ -60,7 +60,7 @@ pnpm dev            # Käynnistä web + mobile rinnakkain
 
 ```bash
 pnpm dev            # Kaikki appit (Turborepo)
-pnpm dev:web        # Vain Next.js (localhost:3000)
+pnpm dev:web        # Next.js → http://localhost:3069
 pnpm dev:mobile     # Vain Expo
 pnpm lint           # ESLint kaikille paketeille
 pnpm typecheck      # TypeScript

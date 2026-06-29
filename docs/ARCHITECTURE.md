@@ -134,7 +134,7 @@ DB → decrypt(key) → plaintext token → API call
 
 | Ympäristö | Web URL | DB |
 |-----------|---------|-----|
-| local | localhost:3000 | Neon dev branch tai local Postgres |
+| local | localhost:3069 | Neon dev branch tai local Postgres |
 | preview | `*.vercel.app` | Neon preview branch |
 | production | yksi.app | Neon main branch |
 

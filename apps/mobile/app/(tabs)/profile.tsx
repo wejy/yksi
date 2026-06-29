@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { View, Text, ScrollView, Pressable, Linking } from 'react-native'
 import { apiFetch } from '@/lib/api'
-import { INTEGRATION_CATALOG } from '@yksi/core'
+import { INTEGRATION_CATALOG, YKSI_DEV_URL } from '@yksi/core'
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000'
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? YKSI_DEV_URL
 
 const EMOJI: Record<string, string> = {
   linear: '📊',

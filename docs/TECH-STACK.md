@@ -30,7 +30,7 @@ DATABASE_URL=postgresql://user:pass@ep-xxx.eu-central-1.aws.neon.tech/yksi?sslmo
 
 # ─── Auth (Better Auth) ───
 BETTER_AUTH_SECRET=          # openssl rand -base64 32
-BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_URL=http://localhost:3069
 
 # Google login (Better Auth)
 GOOGLE_CLIENT_ID=
@@ -58,7 +58,7 @@ STRIPE_WEBHOOK_SECRET=
 STRIPE_PRICE_ID_PREMIUM=      # Stripe Price ID kuukausihinnalle
 
 # ─── Mobile ───
-EXPO_PUBLIC_API_URL=http://localhost:3000
+EXPO_PUBLIC_API_URL=http://localhost:3069
 ```
 
 ### Tuotanto (Vercel)
@@ -92,7 +92,7 @@ pnpm db:migrate   # Migraatiot (tuotanto)
 ### 4. Käynnistä kehityspalvelimet
 
 ```bash
-pnpm dev          # Web (3000) + Mobile (Expo)
+pnpm dev          # Web (3069) + Mobile (Expo)
 pnpm dev:web      # Vain web
 pnpm dev:mobile   # Vain mobile
 ```
@@ -103,12 +103,12 @@ Rekisteröi OAuth-appit:
 
 | Provider | Callback URL |
 |----------|-------------|
-| Google (auth) | `http://localhost:3000/api/auth/callback/google` |
-| Google (calendar) | `http://localhost:3000/api/integrations/google_calendar/callback` |
-| Linear | `http://localhost:3000/api/integrations/linear/callback` |
-| Notion | `http://localhost:3000/api/integrations/notion/callback` |
+| Google (auth) | `http://localhost:3069/api/auth/callback/google` |
+| Google (calendar) | `http://localhost:3069/api/integrations/google_calendar/callback` |
+| Linear | `http://localhost:3069/api/integrations/linear/callback` |
+| Notion | `http://localhost:3069/api/integrations/notion/callback` |
 
-Tuotannossa vaihda `localhost:3000` → `yksi.app`.
+Tuotannossa vaihda `localhost:3069` → `yksi.app`.
 
 ## Komennot
 

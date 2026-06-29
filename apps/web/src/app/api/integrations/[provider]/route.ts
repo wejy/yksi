@@ -17,14 +17,14 @@ import {
 } from '@yksi/integrations/google-calendar'
 import { eq, and } from 'drizzle-orm'
 import { getDb, integrationConnections } from '@yksi/db'
-import type { IntegrationProvider } from '@yksi/core'
+import { YKSI_DEV_URL, type IntegrationProvider } from '@yksi/core'
 import { NextResponse } from 'next/server'
 import { randomBytes } from 'node:crypto'
 
 const PROVIDERS: IntegrationProvider[] = ['linear', 'notion', 'google_calendar']
 
 function getRedirectUri(provider: string) {
-  const base = process.env.BETTER_AUTH_URL ?? 'http://localhost:3000'
+  const base = process.env.BETTER_AUTH_URL ?? YKSI_DEV_URL
   return `${base}/api/integrations/${provider}/callback`
 }
 

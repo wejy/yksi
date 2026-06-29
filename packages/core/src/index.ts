@@ -1,3 +1,4 @@
+export * from './dev'
 export * from './types'
 export * from './normalize'
 export * from './subscription'

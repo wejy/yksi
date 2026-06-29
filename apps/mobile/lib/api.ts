@@ -1,4 +1,6 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000'
+import { YKSI_DEV_URL } from '@yksi/core'
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? YKSI_DEV_URL
 
 export async function apiFetch<T>(
   path: string,
@@ -15,7 +17,7 @@ export async function apiFetch<T>(
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ error: 'Request failed' }))
-    throw new Error(error.error ?? `HTTP ${res.status}`)
+    throw new Error(error.message ?? error.error ?? `HTTP ${res.status}`)
   }
 
   return res.json()

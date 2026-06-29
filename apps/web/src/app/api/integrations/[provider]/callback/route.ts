@@ -5,12 +5,12 @@ import { exchangeNotionCode, searchNotionDatabases } from '@yksi/integrations/no
 import { exchangeGoogleCode, listGoogleCalendars } from '@yksi/integrations/google-calendar'
 import { eq } from 'drizzle-orm'
 import { getDb, integrationConnections } from '@yksi/db'
-import type { IntegrationProvider } from '@yksi/core'
+import { YKSI_DEV_URL, type IntegrationProvider } from '@yksi/core'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 function getRedirectUri(provider: string) {
-  const base = process.env.BETTER_AUTH_URL ?? 'http://localhost:3000'
+  const base = process.env.BETTER_AUTH_URL ?? YKSI_DEV_URL
   return `${base}/api/integrations/${provider}/callback`
 }
 
