@@ -16,6 +16,10 @@ export {
   type IntressiFilterOption,
 } from './components/intressi-filter'
 export { TaskMonthCalendar } from './components/task-month-calendar'
+export { TaskWeekCalendar } from './components/task-week-calendar'
+export { TaskDayStrip } from './components/task-day-strip'
+export { CalendarViewToggle } from './components/calendar-view-toggle'
+export { CalendarTaskCountBadge, CalendarDayTaskIndicator } from './components/calendar-task-indicator'
 export { ProgressRing } from './components/calendar'
 export { BentoSettingCard, SubtaskList } from './components/task-detail'
 export { cn } from './lib/utils'

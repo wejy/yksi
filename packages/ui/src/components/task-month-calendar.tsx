@@ -8,54 +8,39 @@ import {
 } from 'react-day-picker'
 import { fi } from 'react-day-picker/locale'
 import {
-  getTaskOccurrenceDate,
+  getTaskCountsByDateKey,
   toCalendarDateKey,
   type TaskCalendarInput,
 } from '@yksi/core'
 import { cn } from '../lib/utils'
+import { CalendarDayTaskIndicator } from './calendar-task-indicator'
 
-function getTaskDates(tasks: TaskCalendarInput[]): Date[] {
-  const seen = new Set<string>()
-  const dates: Date[] = []
-  for (const task of tasks) {
-    const d = getTaskOccurrenceDate(task)
-    if (!d) continue
-    const key = toCalendarDateKey(d)
-    if (seen.has(key)) continue
-    seen.add(key)
-    dates.push(new Date(d.getFullYear(), d.getMonth(), d.getDate()))
+function createTaskDayButton(taskCounts: Record<string, number>) {
+  return function TaskDayButton({ day, modifiers, className, ...props }: DayButtonProps) {
+    const count = taskCounts[toCalendarDateKey(day.date)] ?? 0
+
+    return (
+      <button
+        {...props}
+        type="button"
+        className={cn(
+          'flex min-h-[4rem] w-full flex-col items-center justify-between rounded-lg px-1 py-1.5 text-sm font-medium transition-colors',
+          count > 0 && !modifiers.selected && 'bg-primary/5',
+          modifiers.selected &&
+            'z-10 bg-primary font-bold text-on-primary shadow-md shadow-primary/20',
+          modifiers.today && !modifiers.selected && 'text-primary ring-2 ring-primary/30',
+          modifiers.outside && !modifiers.selected && 'text-on-surface-variant/40',
+          !modifiers.selected &&
+            !modifiers.outside &&
+            'text-on-surface hover:bg-surface-container-low',
+          className,
+        )}
+      >
+        <span>{day.date.getDate()}</span>
+        <CalendarDayTaskIndicator count={count} selected={!!modifiers.selected} />
+      </button>
+    )
   }
-  return dates
-}
-
-function TaskDayButton({ day, modifiers, className, ...props }: DayButtonProps) {
-  return (
-    <button
-      {...props}
-      type="button"
-      className={cn(
-        'relative flex aspect-square w-full items-center justify-center rounded-lg text-sm font-medium transition-colors',
-        modifiers.selected &&
-          'z-10 scale-110 bg-primary font-bold text-on-primary shadow-md shadow-primary/20',
-        modifiers.today && !modifiers.selected && 'text-primary ring-2 ring-primary/30',
-        modifiers.outside && !modifiers.selected && 'text-on-surface-variant/40',
-        !modifiers.selected &&
-          !modifiers.outside &&
-          'text-on-surface hover:bg-surface-container-low',
-        className,
-      )}
-    >
-      {day.date.getDate()}
-      {modifiers.hasTask ? (
-        <span
-          className={cn(
-            'absolute bottom-1.5 h-1 w-1 rounded-full',
-            modifiers.selected ? 'bg-on-primary' : 'bg-primary',
-          )}
-        />
-      ) : null}
-    </button>
-  )
 }
 
 export interface TaskMonthCalendarProps {
@@ -76,7 +61,8 @@ export function TaskMonthCalendar({
   className,
 }: TaskMonthCalendarProps) {
   const defaultClassNames = getDefaultClassNames()
-  const taskDates = React.useMemo(() => getTaskDates(tasks), [tasks])
+  const taskCounts = React.useMemo(() => getTaskCountsByDateKey(tasks), [tasks])
+  const TaskDayButton = React.useMemo(() => createTaskDayButton(taskCounts), [taskCounts])
 
   return (
     <div
@@ -98,7 +84,6 @@ export function TaskMonthCalendar({
         onSelect={(date) => {
           if (date) onSelectDate(date)
         }}
-        modifiers={{ hasTask: taskDates }}
         className="w-full"
         classNames={{
           ...defaultClassNames,

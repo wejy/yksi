@@ -1,11 +1,13 @@
 import { useMemo } from 'react'
 import { View } from 'react-native'
-import { Calendar, LocaleConfig } from 'react-native-calendars'
+import { Calendar, LocaleConfig, type DateData } from 'react-native-calendars'
 import {
   buildTaskMarkedDates,
+  getTaskCountsByDateKey,
   toCalendarMonthKey,
   type TaskCalendarInput,
 } from '@yksi/core'
+import { CalendarDayCell } from '@/components/calendar-day-cell'
 
 LocaleConfig.locales['fi'] = {
   monthNames: [
@@ -55,14 +57,12 @@ const CALENDAR_THEME = {
   calendarBackground: '#ffffff',
   textSectionTitleColor: '#464555',
   textSectionTitleDisabledColor: '#c7c4d8',
-  selectedDayBackgroundColor: '#3525cd',
+  selectedDayBackgroundColor: 'transparent',
   selectedDayTextColor: '#ffffff',
   todayTextColor: '#3525cd',
   dayTextColor: '#0b1c30',
   textDisabledColor: '#46455566',
   textInactiveColor: '#46455566',
-  dotColor: '#3525cd',
-  selectedDotColor: '#ffffff',
   arrowColor: '#3525cd',
   monthTextColor: '#0b1c30',
   textDayFontWeight: '500' as const,
@@ -83,8 +83,8 @@ const CALENDAR_THEME = {
       paddingRight: 4,
     },
     week: {
-      marginTop: 4,
-      marginBottom: 4,
+      marginTop: 8,
+      marginBottom: 8,
       flexDirection: 'row',
       justifyContent: 'space-around',
     },
@@ -106,6 +106,7 @@ export function TaskCalendar({
   onDayPress,
   onMonthChange,
 }: TaskCalendarProps) {
+  const taskCounts = useMemo(() => getTaskCountsByDateKey(tasks), [tasks])
   const markedDates = useMemo(
     () => buildTaskMarkedDates(tasks, selectedDate),
     [tasks, selectedDate],
@@ -121,11 +122,24 @@ export function TaskCalendar({
         firstDay={1}
         enableSwipeMonths
         hideArrows
-        markingType="dot"
         markedDates={markedDates}
         onDayPress={(day) => onDayPress(new Date(day.year, day.month - 1, day.day))}
         onMonthChange={(month) => onMonthChange(new Date(month.year, month.month - 1, 1))}
         renderHeader={() => null}
+        dayComponent={(props: {
+          date?: DateData
+          state?: string
+          marking?: { selected?: boolean }
+          onPress?: (date?: DateData) => void
+        }) => (
+          <CalendarDayCell
+            date={props.date}
+            state={props.state as 'selected' | 'disabled' | 'inactive' | 'today' | '' | undefined}
+            marking={props.marking}
+            onPress={props.onPress}
+            taskCount={props.date?.dateString ? (taskCounts[props.date.dateString] ?? 0) : 0}
+          />
+        )}
         theme={CALENDAR_THEME}
         style={{ width: '100%' }}
       />
